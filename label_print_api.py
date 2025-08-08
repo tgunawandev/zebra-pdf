@@ -245,11 +245,11 @@ def generate_token():
         name = data.get('name', 'default')
         description = data.get('description')
         
-        # Check if this is initial setup - allow up to 2 tokens without auth for easier setup
-        existing_tokens = token_manager.get_all_tokens()
-        needs_auth = len(existing_tokens) >= 2  # Allow first 2 tokens without auth
+        # For easier setup, allow token generation without auth initially
+        # In production, you may want to enable this by changing False to True
+        REQUIRE_AUTH_FOR_TOKEN_GENERATION = False
         
-        if needs_auth:
+        if REQUIRE_AUTH_FOR_TOKEN_GENERATION:
             # If multiple tokens exist, require authentication
             auth_header = request.headers.get('Authorization')
             if not auth_header or not auth_header.startswith('Bearer '):
