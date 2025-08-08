@@ -58,7 +58,20 @@ export CLOUDFLARE_TOKEN=your_token_here
 ```
 
 ### Using .env File (Recommended)
-Create a `.env` file in your directory:
+
+**Option 1: Use the example template**
+```bash
+# Download the example .env file
+curl -sSL https://raw.githubusercontent.com/tgunawandev/zebra-pdf/master/.env.example -o .env
+
+# Edit with your values
+nano .env  # or vim .env, or any text editor
+
+# Run the system
+./zebra-run.sh
+```
+
+**Option 2: Create manually**
 ```env
 # Zebra Print Control System Configuration
 ZEBRA_DOMAIN=tln-zebra-01.abcfood.app
@@ -69,9 +82,10 @@ CLOUDFLARE_TOKEN=your_cloudflare_tunnel_token_here
 ZEBRA_PRINTER_NAME=ZTC-ZD230-203dpi-ZPL
 ```
 
-Then run:
+**Option 3: Automatic creation**
 ```bash
-./zebra-run.sh  # Automatically loads .env
+# Run script - creates sample .env automatically if not exists
+./zebra-run.sh  # Creates .env, then edit it and run again
 ```
 
 ## 🌐 Tunnel Configuration
