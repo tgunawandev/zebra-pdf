@@ -198,12 +198,19 @@ pull_and_run() {
         [[ -n "$ZEBRA_TUNNEL_TYPE$TUNNEL_TYPE" ]] && echo "  • Tunnel: ${ZEBRA_TUNNEL_TYPE:-$TUNNEL_TYPE}"
     fi
     
-    # Run container with environment variables
+    # Create network if it doesn't exist (same as docker-compose)
+    if ! docker network ls | grep -q zebra-print-network; then
+        echo -e "${BLUE}🌐 Creating zebra-print-network...${NC}"
+        docker network create zebra-print-network
+    fi
+    
+    # Run container with environment variables and proper network
     eval "docker run -d \
         --name $CONTAINER_NAME \
         --restart unless-stopped \
         --privileged \
         --pull always \
+        --network zebra-print-network \
         --device=/dev/bus/usb:/dev/bus/usb \
         -p 5000:5000 \
         -p 8631:631 \
@@ -225,6 +232,89 @@ run_interactive_setup() {
     docker exec -it $CONTAINER_NAME python3 zebra_control_v2.py
 }
 
+start_tunnel() {
+    local domain="${ZEBRA_DOMAIN:-$DOMAIN}"
+    local tunnel_type="${ZEBRA_TUNNEL_TYPE:-$TUNNEL_TYPE}"
+    
+    if [[ -z "$domain" || -z "$tunnel_type" ]]; then
+        return 0  # No tunnel configuration
+    fi
+    
+    echo -e "${BLUE}🚀 Starting $tunnel_type tunnel for $domain...${NC}"
+    
+    if [[ "$tunnel_type" == "cloudflare" && -n "$CLOUDFLARE_TOKEN" ]]; then
+        # Start Cloudflare tunnel
+        docker exec -d $CONTAINER_NAME bash -c "cloudflared tunnel --url http://127.0.0.1:5000 run --token $CLOUDFLARE_TOKEN > /var/log/cloudflare.log 2>&1"
+        
+        # Wait for tunnel to establish
+        echo -e "${YELLOW}⏳ Establishing tunnel connections...${NC}"
+        sleep 8
+        
+        # Check if tunnel process is running
+        if docker exec $CONTAINER_NAME bash -c "ps aux | grep -q '[c]loudflared'"; then
+            echo -e "${GREEN}✅ Cloudflare tunnel started${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ Cloudflare tunnel failed to start${NC}"
+            return 1
+        fi
+        
+    elif [[ "$tunnel_type" == "ngrok" && -n "$NGROK_AUTHTOKEN" ]]; then
+        # Start Ngrok tunnel
+        docker exec -d $CONTAINER_NAME bash -c "ngrok http 5000 --authtoken=$NGROK_AUTHTOKEN > /var/log/ngrok.log 2>&1"
+        
+        echo -e "${YELLOW}⏳ Starting ngrok tunnel...${NC}"
+        sleep 5
+        
+        if docker exec $CONTAINER_NAME bash -c "ps aux | grep -q '[n]grok'"; then
+            echo -e "${GREEN}✅ Ngrok tunnel started${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ Ngrok tunnel failed to start${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}⚠️ Tunnel configuration incomplete${NC}"
+        echo "  • Type: $tunnel_type"
+        echo "  • Token: $([ -n "$CLOUDFLARE_TOKEN$NGROK_AUTHTOKEN" ] && echo "Present" || echo "Missing")"
+        return 1
+    fi
+}
+
+verify_tunnel() {
+    local domain="${ZEBRA_DOMAIN:-$DOMAIN}"
+    
+    if [[ -z "$domain" ]]; then
+        return 0  # No tunnel to verify
+    fi
+    
+    echo -e "${BLUE}🔍 Verifying tunnel connectivity...${NC}"
+    
+    # Try to reach the health endpoint
+    local max_attempts=3
+    local attempt=1
+    
+    while [[ $attempt -le $max_attempts ]]; do
+        if curl -f -s "https://$domain/health" &> /dev/null; then
+            echo -e "${GREEN}✅ Tunnel is working: https://$domain${NC}"
+            echo -e "${CYAN}🌐 Webhook URL: https://$domain/print${NC}"
+            return 0
+        fi
+        
+        echo -e "${YELLOW}⏳ Attempt $attempt/$max_attempts...${NC}"
+        sleep 5
+        ((attempt++))
+    done
+    
+    echo -e "${RED}❌ Tunnel verification failed${NC}"
+    echo -e "${YELLOW}💡 Common fixes:${NC}"
+    echo "  1. Check Cloudflare dashboard tunnel configuration"
+    echo "  2. Ensure domain points to: http://localhost:5000"
+    echo "  3. Verify tunnel token is correct"
+    echo "  4. Check logs: docker logs $CONTAINER_NAME"
+    return 1
+}
+
 show_status() {
     echo -e "${GREEN}✅ System started successfully!${NC}"
     echo
@@ -234,31 +324,37 @@ show_status() {
     echo "  • CUPS Admin:    http://localhost:8631"
     echo
     
-    # Show tunnel information if configured
-    if [[ -n "$ZEBRA_DOMAIN" || -n "$DOMAIN" ]]; then
-        echo -e "${CYAN}🌍 Tunnel Configuration:${NC}"
-        echo "  • Domain: ${ZEBRA_DOMAIN:-$DOMAIN}"
-        echo "  • Webhook URL: https://${ZEBRA_DOMAIN:-$DOMAIN}/print"
-        echo
-    fi
-    
-    echo -e "${YELLOW}💡 Useful commands:${NC}"
-    echo "  • Check status:  docker ps"
-    echo "  • View logs:     docker logs $CONTAINER_NAME"
-    echo "  • Access shell:  docker exec -it $CONTAINER_NAME /bin/bash"
-    echo "  • Setup tunnel:  docker exec -it $CONTAINER_NAME python3 zebra_control_v2.py"
-    echo "  • Stop system:   docker stop $CONTAINER_NAME"
-    echo
-    
     # Wait a moment for container to start
     sleep 3
     
     # Quick health check
     if curl -f http://localhost:5000/health &> /dev/null; then
-        echo -e "${GREEN}✅ API is responding${NC}"
+        echo -e "${GREEN}✅ Local API is responding${NC}"
     else
         echo -e "${YELLOW}⏳ API starting up... (check logs if it doesn't respond in 30s)${NC}"
+        return 1
     fi
+    
+    # Auto-start and verify tunnel if configured
+    local domain="${ZEBRA_DOMAIN:-$DOMAIN}"
+    if [[ -n "$domain" ]]; then
+        echo
+        if start_tunnel && verify_tunnel; then
+            echo
+            echo -e "${GREEN}🎉 System fully operational!${NC}"
+            echo -e "${CYAN}📍 Tunnel Access: https://$domain${NC}"
+        else
+            echo
+            echo -e "${YELLOW}⚠️ Local system working, tunnel needs attention${NC}"
+        fi
+    fi
+    
+    echo
+    echo -e "${YELLOW}💡 Useful commands:${NC}"
+    echo "  • Check status:  docker ps"
+    echo "  • View logs:     docker logs $CONTAINER_NAME"
+    echo "  • Access shell:  docker exec -it $CONTAINER_NAME /bin/bash"
+    echo "  • Stop system:   docker stop $CONTAINER_NAME"
 }
 
 create_sample_env_file() {

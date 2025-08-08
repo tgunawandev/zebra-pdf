@@ -92,7 +92,7 @@ def json_to_zpl(label_data):
             "^JMA",          # Set media type to auto-detect
             
             # QR code only (no text) - repositioned to (25,40)
-            f"^FO25,40^BQN,2,7^FDLA,{label['qr_code']}^FS",
+            f"^FO25,40^BQN,2,5^FDLA,{label['qr_code']}^FS",
             
             # TEXT FIELDS WITH NEW LAYOUT - 18x18 SIZE (9 fields, no qr_code text)
             f"^FO180,50^A0N,18,18^FD{label['do_number']}^FS",      # DO Number

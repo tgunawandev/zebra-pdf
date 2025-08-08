@@ -178,7 +178,7 @@ def create_fallback_zpl(pdf_path: str) -> str:
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     
     zpl = f"""^XA
-^FO50,50^BQN,2,4^FDLA,PDF:{filename}^FS
+^FO50,50^BQN,2,5^FDLA,PDF:{filename}^FS
 ^FO200,100^A0N,25,25^FDPDF Label^FS
 ^FO200,140^A0N,20,20^FD{filename[:25]}^FS
 ^FO200,170^A0N,15,15^FD{timestamp}^FS
