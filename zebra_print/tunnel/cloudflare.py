@@ -13,7 +13,7 @@ from zebra_print.tunnel.base import TunnelProvider
 class CloudflareTunnel(TunnelProvider):
     """Cloudflare tunnel provider implementation."""
     
-    def __init__(self, tunnel_name: str = "zebra-print", local_port: int = 5000):
+    def __init__(self, tunnel_name: str = "zebra-quick", local_port: int = 5000):
         self.tunnel_name = tunnel_name
         self.local_port = local_port
         self.config_dir = os.path.expanduser("~/.cloudflared")

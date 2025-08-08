@@ -419,6 +419,19 @@ class MenuController:
     def _start_api_server(self):
         """Start API server."""
         print("\n🚀 STARTING API SERVER...")
+        
+        # Check if API is already running (supervisor mode)
+        try:
+            import requests
+            response = requests.get("http://localhost:5000/health", timeout=5)
+            if response.status_code == 200:
+                print("✅ API server already running (managed by supervisor)")
+                print("ℹ️ In Docker mode, API runs automatically via supervisor")
+                input("\nPress Enter to continue...")
+                return
+        except:
+            pass
+        
         success, message = self.system_status.api_service.start()
         print(f"{'✅' if success else '❌'} {message}")
         input("\nPress Enter to continue...")
@@ -443,13 +456,16 @@ class MenuController:
             self._setup_cloudflare_named_tunnel()
         elif choice == "2":
             # Cloudflare Quick Tunnel
-            if "cloudflare" in self.system_status.tunnel_providers:
-                tunnel = self.system_status.tunnel_providers["cloudflare"]
+            if "cloudflare_quick" in self.system_status.tunnel_providers:
+                tunnel = self.system_status.tunnel_providers["cloudflare_quick"]
                 print(f"\n🔧 Setting up Cloudflare Quick Tunnel...")
                 success, message = tunnel.setup()
                 print(f"{'✅' if success else '❌'} {message}")
+                if success:
+                    print("\n💡 Quick tunnels provide instant URLs without domain ownership!")
+                    print("💡 Perfect for testing - no DNS setup required!")
             else:
-                print("❌ Cloudflare tunnel provider not available")
+                print("❌ Cloudflare Quick tunnel provider not available")
         elif choice == "3":
             # Ngrok
             if "ngrok" in self.system_status.tunnel_providers:
@@ -575,7 +591,7 @@ class MenuController:
             if choice == "1":
                 tunnel_name = "cloudflare_named"
             elif choice == "2":
-                tunnel_name = "cloudflare"
+                tunnel_name = "cloudflare_quick"
             elif choice == "3":
                 tunnel_name = "ngrok"
             else:

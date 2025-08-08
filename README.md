@@ -4,23 +4,24 @@
 
 ## 🚀 Quick Start
 
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+# 1. Start system (auto-configures printer)
+./zebra.sh start
 
-2. **Run the control panel:**
-   ```bash
-   python zebra_print_control.py
-   ```
+# 2. Setup Cloudflare authentication (one-time)
+./zebra.sh auth
 
-3. **Choose "Quick Start"** - it does everything automatically:
-   - ✅ Starts API server
-   - ✅ Sets up permanent tunnel (Cloudflare recommended)
-   - ✅ Tests complete system
-   - ✅ Shows Odoo webhook URL
+# 3. Configure domain and tunnel
+./zebra.sh setup
+# Choose: Setup Tunnel → Cloudflare → Enter your domain
 
-4. **Configure Odoo once** with the permanent URL and you're done!
+# 4. Ready! Test printing:
+curl -X POST https://your-domain.com/print \
+  -H "Content-Type: application/json" \
+  -d '{"labels":[{"title":"TEST","date":"08/08/25","qr_code":"123"}]}'
+```
+
+**Total setup time: ~2 minutes** | **See: [QUICK_CLOUDFLARE_SETUP.md](QUICK_CLOUDFLARE_SETUP.md)**
 
 ## 📊 What You Get
 

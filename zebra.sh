@@ -43,6 +43,7 @@ print_help() {
     echo "  setup     - Interactive setup wizard"
     echo "  domain    - Configure custom domain"
     echo "  tunnel    - Manage tunnel configuration"
+    echo "  auth      - Setup Cloudflare authentication"
     echo
     echo -e "${YELLOW}🧪 Testing & Maintenance:${NC}"
     echo "  test      - Run system tests"
@@ -56,6 +57,7 @@ print_help() {
     echo "  api       - Test API endpoints"
     echo
     echo -e "${YELLOW}ℹ️ Information:${NC}"
+    echo "  install   - Check installation requirements"
     echo "  help      - Show this help"
     echo "  version   - Show version info"
     echo
@@ -413,6 +415,10 @@ case "$1" in
     "tunnel")
         interactive_setup
         ;;
+    "auth")
+        echo -e "${BLUE}🔐 Running Cloudflare authentication...${NC}"
+        ./cloudflare-auth.sh
+        ;;
     "test")
         run_tests
         ;;
@@ -433,6 +439,10 @@ case "$1" in
         ;;
     "api")
         test_api
+        ;;
+    "install"|"check")
+        echo -e "${BLUE}🔍 Running installation verification...${NC}"
+        ./install-check.sh
         ;;
     "version")
         show_version

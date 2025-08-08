@@ -21,23 +21,23 @@ class FlaskAPIService(APIService):
         self.script_path = "/home/tgunawan/project/01-web/zebra-pdf/label_print_api.py"
     
     def is_running(self) -> bool:
-        """Check if API service is running."""
-        if not os.path.exists(self.pid_file):
-            return False
-        
-        try:
-            with open(self.pid_file, 'r') as f:
-                pid = int(f.read().strip())
-            
-            # Check if process is still running
-            os.kill(pid, 0)
-            return True
-            
-        except (OSError, ProcessLookupError, ValueError):
-            # Clean up stale PID file
-            if os.path.exists(self.pid_file):
+        """Check if API service is running (PID file or HTTP response)."""
+        # Method 1: Check PID file (for manually started instances)
+        if os.path.exists(self.pid_file):
+            try:
+                with open(self.pid_file, 'r') as f:
+                    pid = int(f.read().strip())
+                
+                # Check if process is still running
+                os.kill(pid, 0)
+                return True
+                
+            except (OSError, ProcessLookupError, ValueError):
+                # Clean up stale PID file
                 os.remove(self.pid_file)
-            return False
+        
+        # Method 2: Check if API is responding (for supervisor/Docker instances)
+        return self._health_check()
     
     def start(self) -> Tuple[bool, str]:
         """Start the API service."""

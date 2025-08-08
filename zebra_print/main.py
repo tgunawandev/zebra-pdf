@@ -11,6 +11,7 @@ from zebra_print.api.http_client import HTTPAPIClient
 from zebra_print.printer.zebra_cups import ZebraCUPSPrinter
 from zebra_print.tunnel.cloudflare import CloudflareTunnel
 from zebra_print.tunnel.cloudflare_named import CloudflareNamedTunnel
+from zebra_print.tunnel.cloudflare_quick import CloudflareQuickTunnel
 from zebra_print.tunnel.ngrok import NgrokTunnel
 from zebra_print.tunnel.base import TunnelProvider
 from zebra_print.core.system_status import SystemStatus
@@ -44,11 +45,14 @@ class ZebraPrintApplication:
         # Tunnel providers
         self.tunnel_providers: Dict[str, TunnelProvider] = {
             'cloudflare': CloudflareTunnel(
-                tunnel_name=self.settings.tunnel_name,
+                tunnel_name="zebra-quick",  # Use different name to avoid conflicts
                 local_port=self.settings.api_port
             ),
             'cloudflare_named': CloudflareNamedTunnel(
                 tunnel_name=self.settings.tunnel_name,
+                local_port=self.settings.api_port
+            ),
+            'cloudflare_quick': CloudflareQuickTunnel(
                 local_port=self.settings.api_port
             ),
             'ngrok': NgrokTunnel(

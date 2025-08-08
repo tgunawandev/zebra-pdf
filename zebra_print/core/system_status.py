@@ -41,6 +41,12 @@ class SystemStatus:
         configured_tunnels = [tc for tc in tunnel_configs if tc.is_configured]
         
         if active_tunnel and active_tunnel.is_active():
+            # For cloudflare_named tunnel, ensure domain is loaded from database
+            if active_tunnel.name == 'cloudflare_named' and hasattr(active_tunnel, 'custom_domain'):
+                stored_config = self.db.get_tunnel_config('cloudflare_named')
+                if stored_config and stored_config.domain_mapping and not active_tunnel.custom_domain:
+                    active_tunnel.custom_domain = stored_config.domain_mapping
+            
             tunnel_info = {
                 'name': active_tunnel.name,
                 'is_permanent': active_tunnel.is_permanent,
@@ -75,11 +81,22 @@ class SystemStatus:
         }
     
     def get_active_tunnel(self) -> Optional[TunnelProvider]:
-        """Get the currently active tunnel provider."""
+        """Get the currently active tunnel provider. Prioritizes permanent tunnels."""
         if self._active_tunnel and self._active_tunnel.is_active():
             return self._active_tunnel
         
-        # Check all tunnel providers to find active one
+        # Priority order: named > quick > ngrok > basic cloudflare
+        priority_order = ['cloudflare_named', 'cloudflare_quick', 'ngrok', 'cloudflare']
+        
+        # Check tunnel providers in priority order
+        for tunnel_name in priority_order:
+            if tunnel_name in self.tunnel_providers:
+                tunnel = self.tunnel_providers[tunnel_name]
+                if tunnel.is_active():
+                    self._active_tunnel = tunnel
+                    return tunnel
+        
+        # Fallback: check any remaining active tunnel
         for tunnel in self.tunnel_providers.values():
             if tunnel.is_active():
                 self._active_tunnel = tunnel

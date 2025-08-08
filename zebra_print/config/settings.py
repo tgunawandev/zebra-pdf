@@ -20,7 +20,7 @@ class AppSettings:
     printer_name: str = "ZTC-ZD230-203dpi-ZPL"
     
     # Tunnel Settings
-    tunnel_name: str = "zebra-print"
+    tunnel_name: str = "zebra-printer"
     ngrok_region: str = "us"
     
     # Timeouts

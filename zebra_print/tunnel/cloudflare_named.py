@@ -16,7 +16,7 @@ from zebra_print.database.models import TunnelConfig
 class CloudflareNamedTunnel(TunnelProvider):
     """Cloudflare Named Tunnel with custom domain mapping."""
     
-    def __init__(self, tunnel_name: str = "zebra-print", local_port: int = 5000, 
+    def __init__(self, tunnel_name: str = "zebra-printer", local_port: int = 5000, 
                  custom_domain: Optional[str] = None):
         self.tunnel_name = tunnel_name
         self.local_port = local_port
@@ -93,6 +93,9 @@ class CloudflareNamedTunnel(TunnelProvider):
             ], capture_output=True, text=True)
             
             if dns_result.returncode != 0 and "already exists" not in dns_result.stderr:
+                # Check if it's a domain ownership issue
+                if "neither the ID nor the name" in dns_result.stderr or "DNS" in dns_result.stderr:
+                    return False, f"Domain '{self.custom_domain}' must be managed by Cloudflare DNS first. Please:\n1. Add domain to Cloudflare\n2. Update nameservers\n3. Verify domain is active\n\nError: {dns_result.stderr}"
                 return False, f"Failed to create DNS record: {dns_result.stderr}"
             
             # Save configuration to database
@@ -113,27 +116,66 @@ class CloudflareNamedTunnel(TunnelProvider):
         except Exception as e:
             return False, f"Setup failed: {str(e)}"
     
+    def _auto_discover_credentials(self) -> Optional[str]:
+        """Auto-discover the correct credentials file for this tunnel."""
+        try:
+            # Method 1: Parse tunnel list to get tunnel ID
+            result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                  capture_output=True, text=True)
+            tunnel_id = None
+            
+            if result.returncode == 0:
+                for line in result.stdout.split('\n'):
+                    if self.tunnel_name in line:
+                        parts = line.split()
+                        if len(parts) > 0:
+                            tunnel_id = parts[0]
+                            break
+            
+            if tunnel_id:
+                credentials_path = os.path.join(self.config_dir, f"{tunnel_id}.json")
+                if os.path.exists(credentials_path):
+                    return credentials_path
+            
+            # Method 2: Find any .json file and verify it matches our tunnel
+            if os.path.exists(self.config_dir):
+                for filename in os.listdir(self.config_dir):
+                    if filename.endswith('.json') and len(filename) == 40:  # UUID.json format
+                        credentials_path = os.path.join(self.config_dir, filename)
+                        
+                        # Verify this credential file belongs to our tunnel
+                        tunnel_id_from_file = filename[:-5]  # Remove .json
+                        info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
+                                                   capture_output=True, text=True)
+                        
+                        if info_result.returncode == 0 and self.tunnel_name in info_result.stdout:
+                            return credentials_path
+            
+            return None
+            
+        except Exception as e:
+            print(f"Credential discovery error: {e}")
+            return None
+    
     def _create_named_tunnel_config(self):
-        """Create Cloudflare Named Tunnel configuration with custom domain."""
+        """Create Cloudflare Named Tunnel configuration with automatic credential discovery."""
         os.makedirs(self.config_dir, exist_ok=True)
         
-        # Find tunnel credentials file
-        credentials_file = None
-        tunnel_id = None
+        # Auto-discover credentials file
+        credentials_file = self._auto_discover_credentials()
         
-        # Get tunnel ID from list
-        result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
-                              capture_output=True, text=True)
-        if result.returncode == 0:
-            for line in result.stdout.split('\\n'):
-                if self.tunnel_name in line:
-                    parts = line.split()
-                    if len(parts) > 0:
-                        tunnel_id = parts[0]
-                        break
+        if not credentials_file:
+            # Last resort: look for any .json file
+            for filename in os.listdir(self.config_dir):
+                if filename.endswith('.json'):
+                    credentials_file = os.path.join(self.config_dir, filename)
+                    print(f"⚠️ Using fallback credentials: {credentials_file}")
+                    break
         
-        if tunnel_id:
-            credentials_file = os.path.join(self.config_dir, f"{tunnel_id}.json")
+        if not credentials_file:
+            raise Exception("No tunnel credentials found. Run 'cloudflared tunnel login' first.")
+        
+        print(f"✅ Using credentials: {credentials_file}")
         
         config = {
             'tunnel': self.tunnel_name,
@@ -167,17 +209,31 @@ class CloudflareNamedTunnel(TunnelProvider):
             if stored_config.domain_mapping:
                 self.custom_domain = stored_config.domain_mapping
             
-            # Start tunnel with config file
-            cmd = ['cloudflared', 'tunnel', '--config', self.config_file, 'run', self.tunnel_name]
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
-                                     stderr=subprocess.PIPE, preexec_fn=os.setsid)
+            # Start tunnel with config file using robust background execution
+            cmd = ['nohup', 'cloudflared', 'tunnel', '--config', self.config_file, 'run', self.tunnel_name]
+            
+            # Start process in background with proper log handling
+            log_file = f'/tmp/cloudflared_{self.tunnel_name}.log'
+            with open(log_file, 'w') as f:
+                process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, 
+                                         preexec_fn=os.setsid, cwd='/')
             
             # Save PID
             with open(self.pid_file, 'w') as f:
                 f.write(str(process.pid))
             
-            # Wait for tunnel to start
-            time.sleep(5)
+            # Wait for tunnel to initialize
+            time.sleep(4)
+            
+            # Verify tunnel is running using multiple methods
+            if not self._verify_tunnel_health():
+                # Read logs for debugging
+                try:
+                    with open(log_file, 'r') as f:
+                        logs = f.read()
+                    return False, f"Tunnel failed to start properly. Logs: {logs[-500:]}", None
+                except:
+                    return False, "Tunnel failed to start and no logs available", None
             
             # The URL is our custom domain
             tunnel_url = f"https://{self.custom_domain}"
@@ -245,24 +301,43 @@ class CloudflareNamedTunnel(TunnelProvider):
         
         return status
     
-    def is_active(self) -> bool:
-        """Check if tunnel is currently active."""
-        if not os.path.exists(self.pid_file):
-            return False
+    def _verify_tunnel_health(self) -> bool:
+        """Verify tunnel is healthy using multiple methods."""
+        # Method 1: Check PID file and process
+        if os.path.exists(self.pid_file):
+            try:
+                with open(self.pid_file, 'r') as f:
+                    pid = int(f.read().strip())
+                os.kill(pid, 0)  # Check if process exists
+                
+                # Method 2: Check if cloudflared process is running
+                ps_result = subprocess.run(['pgrep', '-f', f'cloudflared.*{self.tunnel_name}'], 
+                                         capture_output=True, text=True)
+                if ps_result.returncode == 0:
+                    return True
+                    
+            except (OSError, ProcessLookupError, ValueError):
+                pass
         
+        # Method 3: Check cloudflared tunnel list for active connections
         try:
-            with open(self.pid_file, 'r') as f:
-                pid = int(f.read().strip())
-            
-            # Check if process is still running
-            os.kill(pid, 0)
-            return True
-            
-        except (OSError, ProcessLookupError, ValueError):
-            # Clean up stale PID file
-            if os.path.exists(self.pid_file):
-                os.remove(self.pid_file)
-            return False
+            result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                for line in result.stdout.split('\n'):
+                    if self.tunnel_name in line and 'CONNECTIONS' in result.stdout:
+                        # Check if this tunnel has active connections
+                        parts = line.split()
+                        if len(parts) >= 4:  # ID, NAME, CREATED, CONNECTIONS
+                            return True
+        except:
+            pass
+        
+        return False
+    
+    def is_active(self) -> bool:
+        """Check if tunnel is currently active using robust detection."""
+        return self._verify_tunnel_health()
     
     def get_webhook_url(self) -> Optional[str]:
         """Get the webhook URL for Odoo integration."""
