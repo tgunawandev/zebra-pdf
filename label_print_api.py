@@ -46,9 +46,14 @@ def json_to_zpl(label_data):
             {
                 "qr_code": "01010101160",
                 "do_number": "W-CPN/OUT/00002", 
+                "route": "Route A",
                 "date": "12/04/22",
+                "customer": "Customer Name",
+                "so_number": "SO-67890",
+                "mo_number": "MO-12345",
                 "item": "Product Name",
-                "mo_number": "MO-12345"
+                "qty": "100",
+                "uom": "PCS"
             }
         ]
     }
@@ -86,15 +91,16 @@ def json_to_zpl(label_data):
             "^MD5",          # Set media darkness to 5 (medium)
             "^JMA",          # Set media type to auto-detect
             
-            # QR code with new specified positioning
-            f"^FO25,30^BQN,2,7^FDLA,{label['qr_code']}^FS",
+            # QR code only (no text) - repositioned to (25,40)
+            f"^FO25,40^BQN,2,7^FDLA,{label['qr_code']}^FS",
             
-            # TEXT FIELDS WITH NEW SPECIFICATIONS - 18x18 SIZE
+            # TEXT FIELDS WITH NEW LAYOUT - 18x18 SIZE (9 fields, no qr_code text)
             f"^FO180,50^A0N,18,18^FD{label['do_number']}^FS",      # DO Number
-            f"^FO180,75^A0N,18,18^FD{label['date']}^FS",           # Date
-            f"^FO180,100^A0N,18,18^FD{label['item']}^FS",          # Item
-            f"^FO180,125^A0N,18,18^FD{label['mo_number']}^FS",     # MO Number
-            f"^FO180,150^A0N,18,18^FD{label['qr_code']}^FS",       # Route (QR code number)
+            f"^FO180,75^A0N,18,18^FD{label['route']} {label['date']}^FS",        # Route + Date
+            f"^FO180,100^A0N,18,18^FD{label['customer']}^FS",      # Customer
+            f"^FO180,125^A0N,18,18^FD{label['so_number']} {label['mo_number']}^FS",  # SO + MO Number
+            f"^FO180,150^A0N,18,18^FD{label['item']}^FS",          # Item
+            f"^FO180,175^A0N,18,18^FD{label['qty']} {label['uom']}^FS",  # Qty + UOM
             
             "^XZ"            # End format
         ])
@@ -156,9 +162,14 @@ def print_labels():
             {
                 "qr_code": "01010101160",
                 "do_number": "W-CPN/OUT/00002", 
+                "route": "Route A",
                 "date": "12/04/22",
+                "customer": "Customer Name",
+                "so_number": "SO-67890",
+                "mo_number": "MO-12345",
                 "item": "Product Name",
-                "mo_number": "MO-12345"
+                "qty": "100",
+                "uom": "PCS"
             }
         ]
     }
@@ -178,7 +189,7 @@ def print_labels():
             return jsonify({"error": "'labels' must be a non-empty array"}), 400
         
         # Validate each label
-        required_fields = ['qr_code', 'do_number', 'date', 'item', 'mo_number']
+        required_fields = ['qr_code', 'do_number', 'route', 'date', 'customer', 'so_number', 'mo_number', 'item', 'qty', 'uom']
         for i, label in enumerate(data['labels']):
             for field in required_fields:
                 if field not in label:

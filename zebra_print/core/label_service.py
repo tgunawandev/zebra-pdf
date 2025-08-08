@@ -18,9 +18,14 @@ class LabelService:
         return {
             "qr_code": f"{prefix}{datetime.now().strftime('%H%M%S')}",
             "do_number": f"W-CPN/OUT/{prefix}",
+            "route": f"Route-{prefix}",
             "date": datetime.now().strftime("%d/%m/%y"),
+            "customer": f"Customer {prefix}",
+            "so_number": f"SO-{prefix}-001",
+            "mo_number": f"MO-{prefix}-001",
             "item": f"Sample Item {prefix}",
-            "mo_number": f"MO-{prefix}-001"
+            "qty": "100",
+            "uom": "PCS"
         }
     
     def create_custom_label(self, title: str, date: str, qr_code: str) -> Dict:
@@ -33,7 +38,7 @@ class LabelService:
     
     def validate_label_data(self, label: Dict) -> Tuple[bool, str]:
         """Validate label data structure."""
-        required_fields = ['qr_code', 'do_number', 'date', 'item', 'mo_number']
+        required_fields = ['qr_code', 'do_number', 'route', 'date', 'customer', 'so_number', 'mo_number', 'item', 'qty', 'uom']
         
         for field in required_fields:
             if field not in label:
