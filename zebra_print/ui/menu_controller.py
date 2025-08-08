@@ -287,10 +287,9 @@ class MenuController:
         
         if api_status['running']:
             # Get authentication token
-            token = self._get_default_token()
+            token = self._get_token_for_testing()
             if not token:
-                print("❌ No authentication token available")
-                print("💡 Generate a token first using 'A. API Security' menu")
+                print("❌ No token provided - test cancelled")
                 return
             
             labels = [self.label_service.create_sample_label("LOCAL")]
@@ -321,10 +320,9 @@ class MenuController:
             
             if url:
                 # Get authentication token
-                token = self._get_default_token()
+                token = self._get_token_for_testing()
                 if not token:
-                    print("❌ No authentication token available")
-                    print("💡 Generate a token first using 'A. API Security' menu")
+                    print("❌ No token provided - test cancelled")
                     return
                 
                 labels = [self.label_service.create_sample_label("TUNNEL")]
@@ -1008,25 +1006,10 @@ class MenuController:
         # This method can be enhanced to update stored webhook configurations
         pass
     
-    def _get_default_token(self):
-        """Get any available token for testing."""
+    def _get_token_for_testing(self):
+        """Get token for testing - prompt user to enter token."""
         try:
-            import subprocess
-            
-            # First try to get default token from container logs
-            result = subprocess.run([
-                'docker', 'logs', 'zebra-print-control'
-            ], capture_output=True, text=True, timeout=10)
-            
-            if result.returncode == 0:
-                lines = result.stdout.split('\n')
-                
-                for line in reversed(lines):  # Check from newest to oldest
-                    if "🔑 Generated default API token:" in line:
-                        token = line.split("🔑 Generated default API token: ")[1].strip()
-                        return token
-            
-            # If no default token found in logs, try to get from API info
+            # Get available tokens from API
             import requests
             api_status = self.system_status.api_service.get_status()
             
@@ -1039,16 +1022,25 @@ class MenuController:
                     active_tokens = [t for t in data['tokens'] if t['is_active']]
                     
                     if active_tokens:
-                        # Ask user to provide token since we can't retrieve the value
-                        print(f"\n💡 Found {len(active_tokens)} active tokens but need token value for testing")
-                        print("Available tokens:")
+                        print(f"\n💡 Found {len(active_tokens)} active token(s):")
                         for token in active_tokens:
                             print(f"   - {token['name']}")
                         
-                        user_token = input("\nEnter token value for testing (or press Enter to skip): ").strip()
+                        print("\n🔑 Enter your API token for testing:")
+                        print("   (You can find your tokens in 'A. API Security' → 'Generate New Token')")
+                        user_token = input("Token: ").strip()
                         return user_token if user_token else None
+                    else:
+                        print("❌ No active tokens found")
+                        print("💡 Generate a token first using 'A. API Security' menu")
+                        return None
+                else:
+                    print("❌ Failed to get token info from API")
+                    return None
+            else:
+                print("❌ API server not running")
+                return None
                         
-        except Exception:
-            pass
-        
-        return None
+        except Exception as e:
+            print(f"❌ Error getting token info: {e}")
+            return None
