@@ -16,9 +16,11 @@ class LabelService:
     def create_sample_label(self, prefix: str = "TEST") -> Dict:
         """Create a sample label for testing."""
         return {
-            "title": f"W-CPN/OUT/{prefix}",
+            "qr_code": f"{prefix}{datetime.now().strftime('%H%M%S')}",
+            "do_number": f"W-CPN/OUT/{prefix}",
             "date": datetime.now().strftime("%d/%m/%y"),
-            "qr_code": f"{prefix}{datetime.now().strftime('%H%M%S')}"
+            "item": f"Sample Item {prefix}",
+            "mo_number": f"MO-{prefix}-001"
         }
     
     def create_custom_label(self, title: str, date: str, qr_code: str) -> Dict:
@@ -31,7 +33,7 @@ class LabelService:
     
     def validate_label_data(self, label: Dict) -> Tuple[bool, str]:
         """Validate label data structure."""
-        required_fields = ['title', 'date', 'qr_code']
+        required_fields = ['qr_code', 'do_number', 'date', 'item', 'mo_number']
         
         for field in required_fields:
             if field not in label:
