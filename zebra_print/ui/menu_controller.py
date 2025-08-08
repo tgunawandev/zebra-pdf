@@ -286,10 +286,19 @@ class MenuController:
         api_status = self.system_status.api_service.get_status()
         
         if api_status['running']:
+            # Get authentication token
+            token = self._get_default_token()
+            if not token:
+                print("❌ No authentication token available")
+                print("💡 Generate a token first using 'A. API Security' menu")
+                return
+            
             labels = [self.label_service.create_sample_label("LOCAL")]
             url = f"http://{api_status['host']}:{api_status['port']}/print"
             
-            success, message, data = self.label_service.print_labels_local(labels, url)
+            # Add authentication header
+            headers = {'Authorization': f'Bearer {token}'}
+            success, message, data = self.label_service.api_client.print_labels(url, labels, headers)
             
             if success:
                 print(f"✅ {message}")
@@ -311,10 +320,19 @@ class MenuController:
             url = tunnel_status.get('url')
             
             if url:
+                # Get authentication token
+                token = self._get_default_token()
+                if not token:
+                    print("❌ No authentication token available")
+                    print("💡 Generate a token first using 'A. API Security' menu")
+                    return
+                
                 labels = [self.label_service.create_sample_label("TUNNEL")]
-                success, message, data = self.label_service.print_labels_tunnel(
-                    labels, url, active_tunnel.name
-                )
+                print_url = f"{url}/print"
+                
+                # Add authentication header
+                headers = {'Authorization': f'Bearer {token}'}
+                success, message, data = self.label_service.api_client.print_labels(print_url, labels, headers)
                 
                 if success:
                     print(f"✅ {message}")
@@ -831,6 +849,9 @@ class MenuController:
                     print("\n💡 To generate additional tokens, you need an existing valid token")
                     print("💡 Get your default token from startup logs:")
                     print("   docker logs zebra-print-control | grep '🔑 Generated'")
+                elif "already exists" in error_data.get('message', ''):
+                    print(f"\n💡 Token name '{name}' already exists. Try a different name.")
+                    print("💡 Use option 1 to see existing token names.")
                 
         except Exception as e:
             print(f"❌ Error generating token: {e}")
@@ -986,3 +1007,26 @@ class MenuController:
         """Update internal webhook URL tracking with token."""
         # This method can be enhanced to update stored webhook configurations
         pass
+    
+    def _get_default_token(self):
+        """Get the default token from container logs."""
+        try:
+            import subprocess
+            
+            # Get the default token from container logs
+            result = subprocess.run([
+                'docker', 'logs', 'zebra-print-control'
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                
+                for line in reversed(lines):  # Check from newest to oldest
+                    if "🔑 Generated default API token:" in line:
+                        token = line.split("🔑 Generated default API token: ")[1].strip()
+                        return token
+                        
+        except Exception:
+            pass
+        
+        return None

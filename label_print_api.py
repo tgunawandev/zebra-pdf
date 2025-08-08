@@ -245,9 +245,9 @@ def generate_token():
         name = data.get('name', 'default')
         description = data.get('description')
         
-        # Check if this is initial setup or if there's only one default token
+        # Check if this is initial setup - allow up to 2 tokens without auth for easier setup
         existing_tokens = token_manager.get_all_tokens()
-        needs_auth = len(existing_tokens) > 1  # Allow first additional token without auth
+        needs_auth = len(existing_tokens) >= 2  # Allow first 2 tokens without auth
         
         if needs_auth:
             # If multiple tokens exist, require authentication
@@ -267,19 +267,25 @@ def generate_token():
                 }), 401
         
         # Generate new token
-        new_token = token_manager.generate_token(name, description)
-        
-        return jsonify({
-            'success': True,
-            'token': new_token,
-            'name': name,
-            'message': 'Token generated successfully',
-            'webhook_examples': {
-                'header': f'Authorization: Bearer {new_token}',
-                'query': f'/print?token={new_token}',
-                'body': f'{{"token": "{new_token}", "labels": [...]}}'
-            }
-        })
+        try:
+            new_token = token_manager.generate_token(name, description)
+            
+            return jsonify({
+                'success': True,
+                'token': new_token,
+                'name': name,
+                'message': 'Token generated successfully',
+                'webhook_examples': {
+                    'header': f'Authorization: Bearer {new_token}',
+                    'query': f'/print?token={new_token}',
+                    'body': f'{{"token": "{new_token}", "labels": [...]}}'
+                }
+            })
+        except ValueError as e:
+            return jsonify({
+                'error': 'Token generation failed',
+                'message': str(e)
+            }), 400
         
     except Exception as e:
         return jsonify({
