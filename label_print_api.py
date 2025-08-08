@@ -86,15 +86,15 @@ def json_to_zpl(label_data):
             "^MD5",          # Set media darkness to 5 (medium)
             "^JMA",          # Set media type to auto-detect
             
-            # QR code with specified positioning
-            f"^FO22,25^BQN,2,7^FDLA,{label['qr_code']}^FS",
+            # QR code with new specified positioning
+            f"^FO25,30^BQN,2,7^FDLA,{label['qr_code']}^FS",
             
-            # TEXT FIELDS WITH EXACT SPECIFIED POSITIONS
-            f"^FO170,30^A0N,16,16^FD{label['do_number']}^FS",      # DO Number
-            f"^FO170,55^A0N,16,16^FD{label['date']}^FS",           # Date
-            f"^FO170,80^A0N,16,16^FD{label['item']}^FS",           # Item
-            f"^FO170,105^A0N,16,16^FD{label['mo_number']}^FS",     # MO Number
-            f"^FO170,125^A0N,14,14^FD{label['qr_code']}^FS",       # QR code number (smaller)
+            # TEXT FIELDS WITH NEW SPECIFICATIONS - 18x18 SIZE
+            f"^FO180,50^A0N,18,18^FD{label['do_number']}^FS",      # DO Number
+            f"^FO180,75^A0N,18,18^FD{label['date']}^FS",           # Date
+            f"^FO180,100^A0N,18,18^FD{label['item']}^FS",          # Item
+            f"^FO180,125^A0N,18,18^FD{label['mo_number']}^FS",     # MO Number
+            f"^FO180,150^A0N,18,18^FD{label['qr_code']}^FS",       # Route (QR code number)
             
             "^XZ"            # End format
         ])
