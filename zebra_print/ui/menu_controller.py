@@ -1009,11 +1009,11 @@ class MenuController:
         pass
     
     def _get_default_token(self):
-        """Get the default token from container logs."""
+        """Get any available token for testing."""
         try:
             import subprocess
             
-            # Get the default token from container logs
+            # First try to get default token from container logs
             result = subprocess.run([
                 'docker', 'logs', 'zebra-print-control'
             ], capture_output=True, text=True, timeout=10)
@@ -1025,6 +1025,28 @@ class MenuController:
                     if "🔑 Generated default API token:" in line:
                         token = line.split("🔑 Generated default API token: ")[1].strip()
                         return token
+            
+            # If no default token found in logs, try to get from API info
+            import requests
+            api_status = self.system_status.api_service.get_status()
+            
+            if api_status['running']:
+                info_url = f"http://{api_status['host']}:{api_status['port']}/auth/info"
+                response = requests.get(info_url, timeout=5)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    active_tokens = [t for t in data['tokens'] if t['is_active']]
+                    
+                    if active_tokens:
+                        # Ask user to provide token since we can't retrieve the value
+                        print(f"\n💡 Found {len(active_tokens)} active tokens but need token value for testing")
+                        print("Available tokens:")
+                        for token in active_tokens:
+                            print(f"   - {token['name']}")
+                        
+                        user_token = input("\nEnter token value for testing (or press Enter to skip): ").strip()
+                        return user_token if user_token else None
                         
         except Exception:
             pass
