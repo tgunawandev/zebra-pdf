@@ -1,0 +1,51 @@
+
+services:
+  zebra-print:
+    build: 
+      context: .
+      dockerfile: Dockerfile.alpine
+    container_name: zebra-print-control
+    restart: unless-stopped
+    
+    # USB printer access
+    privileged: true
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    
+    # Network ports
+    ports:
+      - "5000:5000"  # API server
+      - "8631:631"   # CUPS web interface (avoiding host conflict)
+    
+    # Volumes for persistence
+    volumes:
+      - zebra_data:/app/data
+      - zebra_logs:/var/log/zebra-print
+      - /dev:/dev:ro  # Device access
+    
+    # Environment variables
+    environment:
+      - ZEBRA_API_HOST=0.0.0.0
+      - ZEBRA_API_PORT=5000
+      - ZEBRA_PRINTER_NAME=ZTC-ZD230-203dpi-ZPL
+      - ZEBRA_DB_PATH=/app/data/zebra_print.db
+      - TZ=UTC
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  zebra_data:
+    driver: local
+  zebra_logs:
+    driver: local
+
+# For easier management
+networks:
+  default:
+    name: zebra-print-network

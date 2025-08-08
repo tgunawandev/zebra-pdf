@@ -113,3 +113,123 @@
 2025-08-08 20:38:50,337 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:50] "POST /print HTTP/1.1" 200 -
 2025-08-08 20:38:54,600 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:54] "GET /health HTTP/1.1" 200 -
 2025-08-08 20:38:54,604 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:54] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:43:26,136 - INFO - 127.0.0.1 - - [08/Aug/2025 20:43:26] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:43:56,413 - INFO - 127.0.0.1 - - [08/Aug/2025 20:43:56] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:45:55,232 - INFO - 127.0.0.1 - - [08/Aug/2025 20:45:55] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:46:04,422 - INFO - 📨 Received print request for 2 labels
+2025-08-08 20:46:04,422 - INFO - 🔄 Converting 2 labels to ZPL
+2025-08-08 20:46:04,422 - INFO - ✅ Generated ZPL with 2 labels
+2025-08-08 20:46:04,422 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:46:04,430 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-746 (0 file(s))
+2025-08-08 20:46:04,430 - INFO - ✅ Print request completed successfully
+2025-08-08 20:46:04,430 - INFO - 127.0.0.1 - - [08/Aug/2025 20:46:04] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:48:19,652 - INFO - 127.0.0.1 - - [08/Aug/2025 20:48:19] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:48:26,623 - INFO - 127.0.0.1 - - [08/Aug/2025 20:48:26] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:48:34,081 - INFO - 127.0.0.1 - - [08/Aug/2025 20:48:34] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:48:52,481 - INFO - 127.0.0.1 - - [08/Aug/2025 20:48:52] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:49:00,846 - INFO - 127.0.0.1 - - [08/Aug/2025 20:49:00] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:49:54,379 - INFO - 127.0.0.1 - - [08/Aug/2025 20:49:54] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:49:56,375 - INFO - 127.0.0.1 - - [08/Aug/2025 20:49:56] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:50:01,398 - INFO - 127.0.0.1 - - [08/Aug/2025 20:50:01] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:50:11,383 - INFO - 127.0.0.1 - - [08/Aug/2025 20:50:11] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:02:58,712 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:02:58,713 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:02:58,713 - INFO - 🔗 Endpoints:
+2025-08-08 21:02:58,713 - INFO -    POST /print - Print labels
+2025-08-08 21:02:58,713 - INFO -    GET /health - Health check
+2025-08-08 21:02:58,713 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:03:00,622 - INFO - 127.0.0.1 - - [08/Aug/2025 21:03:00] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:03:11,046 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:03:11,046 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:03:11,046 - INFO - 🔗 Endpoints:
+2025-08-08 21:03:11,046 - INFO -    POST /print - Print labels
+2025-08-08 21:03:11,046 - INFO -    GET /health - Health check
+2025-08-08 21:03:11,046 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:03:12,974 - INFO - 127.0.0.1 - - [08/Aug/2025 21:03:12] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:03:46,571 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:03:46,571 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:03:46,571 - INFO - 🔗 Endpoints:
+2025-08-08 21:03:46,571 - INFO -    POST /print - Print labels
+2025-08-08 21:03:46,571 - INFO -    GET /health - Health check
+2025-08-08 21:03:46,571 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:03:48,503 - INFO - 127.0.0.1 - - [08/Aug/2025 21:03:48] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:05:19,195 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:05:19,195 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:05:19,195 - INFO - 🔗 Endpoints:
+2025-08-08 21:05:19,195 - INFO -    POST /print - Print labels
+2025-08-08 21:05:19,195 - INFO -    GET /health - Health check
+2025-08-08 21:05:19,195 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:05:21,123 - INFO - 127.0.0.1 - - [08/Aug/2025 21:05:21] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:05:31,626 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:05:31,626 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:05:31,626 - INFO - 🔗 Endpoints:
+2025-08-08 21:05:31,626 - INFO -    POST /print - Print labels
+2025-08-08 21:05:31,626 - INFO -    GET /health - Health check
+2025-08-08 21:05:31,626 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:06:07,238 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:06:07,238 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:06:07,238 - INFO - 🔗 Endpoints:
+2025-08-08 21:06:07,238 - INFO -    POST /print - Print labels
+2025-08-08 21:06:07,238 - INFO -    GET /health - Health check
+2025-08-08 21:06:07,238 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:06:07,239 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.110:5000
+2025-08-08 21:06:07,239 - INFO - [33mPress CTRL+C to quit[0m
+2025-08-08 21:06:09,168 - INFO - 127.0.0.1 - - [08/Aug/2025 21:06:09] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:06:14,177 - INFO - 127.0.0.1 - - [08/Aug/2025 21:06:14] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:06:54,356 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:06:54,356 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:06:54,356 - INFO - 🔗 Endpoints:
+2025-08-08 21:06:54,356 - INFO -    POST /print - Print labels
+2025-08-08 21:06:54,356 - INFO -    GET /health - Health check
+2025-08-08 21:06:54,356 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:06:54,358 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.110:5000
+2025-08-08 21:06:54,358 - INFO - [33mPress CTRL+C to quit[0m
+2025-08-08 21:06:56,289 - INFO - 127.0.0.1 - - [08/Aug/2025 21:06:56] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:06:59,297 - INFO - 127.0.0.1 - - [08/Aug/2025 21:06:59] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:06:59,300 - INFO - 127.0.0.1 - - [08/Aug/2025 21:06:59] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:24,150 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:07:24,151 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:07:24,151 - INFO - 🔗 Endpoints:
+2025-08-08 21:07:24,151 - INFO -    POST /print - Print labels
+2025-08-08 21:07:24,151 - INFO -    GET /health - Health check
+2025-08-08 21:07:24,151 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:07:24,152 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.110:5000
+2025-08-08 21:07:24,152 - INFO - [33mPress CTRL+C to quit[0m
+2025-08-08 21:07:26,084 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:26] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:26,836 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:26] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:26,868 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:26] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:36,835 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 21:07:36,835 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 21:07:36,835 - INFO - 🔗 Endpoints:
+2025-08-08 21:07:36,835 - INFO -    POST /print - Print labels
+2025-08-08 21:07:36,835 - INFO -    GET /health - Health check
+2025-08-08 21:07:36,835 - INFO -    GET /printer/status - Printer status
+2025-08-08 21:07:36,836 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.110:5000
+2025-08-08 21:07:36,836 - INFO - [33mPress CTRL+C to quit[0m
+2025-08-08 21:07:38,764 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:38] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:41,628 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:41] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:41,658 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:41] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:56,464 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:56] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:07:56,492 - INFO - 127.0.0.1 - - [08/Aug/2025 21:07:56] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:08:11,468 - INFO - 127.0.0.1 - - [08/Aug/2025 21:08:11] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:08:11,492 - INFO - 127.0.0.1 - - [08/Aug/2025 21:08:11] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:11:32,585 - INFO - 127.0.0.1 - - [08/Aug/2025 21:11:32] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:11:32,620 - INFO - 127.0.0.1 - - [08/Aug/2025 21:11:32] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:11:42,360 - INFO - 127.0.0.1 - - [08/Aug/2025 21:11:42] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:11:42,387 - INFO - 127.0.0.1 - - [08/Aug/2025 21:11:42] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:11:54,234 - INFO - 127.0.0.1 - - [08/Aug/2025 21:11:54] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:11:54,266 - INFO - 127.0.0.1 - - [08/Aug/2025 21:11:54] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:46:29,498 - INFO - 127.0.0.1 - - [08/Aug/2025 21:46:29] "GET /health HTTP/1.1" 200 -
+2025-08-08 21:46:29,526 - INFO - 127.0.0.1 - - [08/Aug/2025 21:46:29] "GET /health HTTP/1.1" 200 -
