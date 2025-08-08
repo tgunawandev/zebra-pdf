@@ -37,6 +37,7 @@ class MenuController:
         print("7. 🖨️  Printer Management")
         print("8. 🧪 Test Functions")
         print("9. 📤 Integration Test")
+        print("A. 🔐 API Security")
         print("0. 🚪 Exit")
         print("-" * 40)
     
@@ -405,6 +406,8 @@ class MenuController:
                     self.handle_test_functions()
                 elif choice == "9":
                     self._integration_test()
+                elif choice.upper() == "A":
+                    self._api_security_menu()
                 else:
                     print("❌ Invalid option")
                     input("\nPress Enter to continue...")
@@ -684,3 +687,302 @@ class MenuController:
                 print("❌ Webhook URL not available")
         
         input("\nPress Enter to continue...")
+    
+    def _api_security_menu(self):
+        """Handle API security and token management."""
+        while True:
+            print("\n🔐 API SECURITY MANAGEMENT:")
+            print("1. 📋 List API Tokens")
+            print("2. 🔑 Generate New Token") 
+            print("3. 🗑️  Revoke Token")
+            print("4. 🧪 Test Authentication")
+            print("5. 📖 Show Integration Examples")
+            print("6. 🔍 Show Default Token")
+            print("0. ⬅️  Back to Main Menu")
+            
+            choice = input("\nSelect option: ").strip()
+            
+            if choice == "0":
+                break
+            elif choice == "1":
+                self._list_api_tokens()
+            elif choice == "2":
+                self._generate_api_token()
+            elif choice == "3":
+                self._revoke_api_token()
+            elif choice == "4":
+                self._test_authentication()
+            elif choice == "5":
+                self._show_integration_examples()
+            elif choice == "6":
+                self._show_default_token()
+            else:
+                print("❌ Invalid option")
+            
+            input("\nPress Enter to continue...")
+    
+    def _list_api_tokens(self):
+        """List all API tokens."""
+        print("\n📋 API TOKENS:")
+        
+        try:
+            import requests
+            api_status = self.system_status.api_service.get_status()
+            
+            if not api_status['running']:
+                print("❌ API server not running. Start it first.")
+                return
+            
+            # Get token information
+            info_url = f"http://{api_status['host']}:{api_status['port']}/auth/info"
+            
+            response = requests.get(info_url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                self._display_tokens(data['tokens'])
+                
+                if data['total_tokens'] == 1 and data['tokens'][0]['name'] == 'default':
+                    print("\n💡 You have a default token generated at startup")
+                    print("💡 Check the container logs for the token value:")
+                    print("   docker logs zebra-print-control | grep '🔑 Generated'")
+            else:
+                print("❌ Failed to get token information")
+                print("💡 Generate your first token using option 2")
+                
+        except Exception as e:
+            print(f"❌ Error listing tokens: {e}")
+    
+    def _display_tokens(self, tokens):
+        """Display token information in a table format."""
+        if not tokens:
+            print("   No tokens found")
+            return
+        
+        print(f"   {'Name':<15} {'Status':<8} {'Created':<20} {'Last Used':<20}")
+        print("   " + "-" * 70)
+        
+        for token in tokens:
+            status = "Active" if token['is_active'] else "Revoked"
+            created = token['created_at'][:19] if token['created_at'] else "Unknown"
+            last_used = token['last_used'][:19] if token['last_used'] else "Never"
+            
+            print(f"   {token['name']:<15} {status:<8} {created:<20} {last_used:<20}")
+    
+    def _generate_api_token(self):
+        """Generate a new API token."""
+        print("\n🔑 GENERATE NEW API TOKEN:")
+        
+        try:
+            import requests
+            api_status = self.system_status.api_service.get_status()
+            
+            if not api_status['running']:
+                print("❌ API server not running. Start it first.")
+                return
+            
+            # First check if there's a default token that can be retrieved
+            info_url = f"http://{api_status['host']}:{api_status['port']}/auth/info"
+            info_response = requests.get(info_url, timeout=5)
+            
+            if info_response.status_code == 200:
+                info_data = info_response.json()
+                if (info_data['total_tokens'] == 1 and 
+                    info_data['tokens'][0]['name'] == 'default' and 
+                    info_data['tokens'][0]['is_active']):
+                    
+                    print("💡 You already have a default token!")
+                    print("💡 To get the token value, check the startup logs:")
+                    print("   docker logs zebra-print-control | grep '🔑 Generated'")
+                    
+                    choice = input("\nGenerate additional token? (y/N): ").strip().lower()
+                    if choice not in ['y', 'yes']:
+                        return
+        
+            name = input("Token name (default): ").strip() or "default"
+            description = input("Description (optional): ").strip()
+            
+            url = f"http://{api_status['host']}:{api_status['port']}/auth/token"
+            payload = {"name": name}
+            if description:
+                payload["description"] = description
+            
+            response = requests.post(url, json=payload, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                token = data['token']
+                
+                print(f"\n✅ Token generated successfully!")
+                print(f"🔑 Token: {token}")
+                print(f"📝 Name: {name}")
+                print(f"\n🔐 SAVE THIS TOKEN - you cannot retrieve it again!")
+                print(f"\n💡 Webhook Integration Examples:")
+                print(f"   Header: Authorization: Bearer {token}")
+                print(f"   Query:  /print?token={token}")
+                
+                # Update webhook URL in tunnel status
+                self._update_webhook_url_with_token(token)
+                
+            else:
+                error_data = response.json()
+                print(f"❌ Failed to generate token: {error_data.get('message', 'Unknown error')}")
+                
+                if "Authentication required" in error_data.get('message', ''):
+                    print("\n💡 To generate additional tokens, you need an existing valid token")
+                    print("💡 Get your default token from startup logs:")
+                    print("   docker logs zebra-print-control | grep '🔑 Generated'")
+                
+        except Exception as e:
+            print(f"❌ Error generating token: {e}")
+    
+    def _revoke_api_token(self):
+        """Revoke an API token."""
+        print("\n🗑️  REVOKE API TOKEN:")
+        
+        # First list existing tokens
+        self._list_api_tokens()
+        
+        name = input("\nEnter token name to revoke: ").strip()
+        if not name:
+            print("❌ Token name required")
+            return
+        
+        confirm = input(f"⚠️  Are you sure you want to revoke '{name}'? (y/N): ").strip().lower()
+        if confirm not in ['y', 'yes']:
+            print("❌ Revocation cancelled")
+            return
+        
+        try:
+            import requests
+            api_status = self.system_status.api_service.get_status()
+            url = f"http://{api_status['host']}:{api_status['port']}/auth/token/{name}"
+            
+            # This requires authentication - user needs valid token
+            token = input("Enter valid API token for authentication: ").strip()
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            response = requests.delete(url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                print(f"✅ Token '{name}' revoked successfully")
+            else:
+                error_data = response.json()
+                print(f"❌ Failed to revoke token: {error_data.get('message', 'Unknown error')}")
+                
+        except Exception as e:
+            print(f"❌ Error revoking token: {e}")
+    
+    def _test_authentication(self):
+        """Test API authentication with user's token."""
+        print("\n🧪 TEST API AUTHENTICATION:")
+        
+        token = input("Enter API token to test: ").strip()
+        if not token:
+            print("❌ Token required")
+            return
+        
+        try:
+            import requests
+            api_status = self.system_status.api_service.get_status()
+            
+            # Test protected endpoint
+            url = f"http://{api_status['host']}:{api_status['port']}/printer/status"
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            response = requests.get(url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                print("✅ Authentication successful!")
+                data = response.json()
+                print(f"   Response: {data}")
+            elif response.status_code == 401:
+                print("❌ Authentication failed - invalid or revoked token")
+            else:
+                print(f"❌ Unexpected response: {response.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Test failed: {e}")
+    
+    def _show_integration_examples(self):
+        """Show webhook integration examples."""
+        print("\n📖 WEBHOOK INTEGRATION EXAMPLES:")
+        print("=" * 50)
+        
+        # Get tunnel URL
+        active_tunnel = self.system_status.get_active_tunnel()
+        webhook_url = "https://your-domain.com"
+        
+        if active_tunnel:
+            status = active_tunnel.get_status()
+            if status.get('url'):
+                webhook_url = status['url']
+        
+        print(f"\n🔗 Your Webhook URL: {webhook_url}/print")
+        print(f"\n1️⃣ **Authorization Header (Recommended)**:")
+        print(f"   URL: {webhook_url}/print")
+        print(f"   Headers: Authorization: Bearer zp_your_token_here")
+        print(f"   Body: {{\"labels\": [...]}}")
+        
+        print(f"\n2️⃣ **Query Parameter**:")
+        print(f"   URL: {webhook_url}/print?token=zp_your_token_here")
+        print(f"   Body: {{\"labels\": [...]}}")
+        
+        print(f"\n3️⃣ **Request Body**:")
+        print(f"   URL: {webhook_url}/print")
+        print(f"   Body: {{\"token\": \"zp_your_token_here\", \"labels\": [...]}}")
+        
+        print(f"\n📋 **Odoo Webhook Configuration:**")
+        print(f"   • URL: {webhook_url}/print")
+        print(f"   • Method: POST")
+        print(f"   • Headers: Authorization: Bearer zp_your_token_here")
+        print(f"   • Content-Type: application/json")
+    
+    def _show_default_token(self):
+        """Show the default token from startup logs."""
+        print("\n🔍 DEFAULT TOKEN:")
+        
+        try:
+            import subprocess
+            
+            # Get the default token from container logs
+            result = subprocess.run([
+                'docker', 'logs', 'zebra-print-control'
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                token_line = None
+                
+                for line in reversed(lines):  # Check from newest to oldest
+                    if "🔑 Generated default API token:" in line:
+                        token_line = line
+                        break
+                
+                if token_line:
+                    token = token_line.split("🔑 Generated default API token: ")[1].strip()
+                    print(f"🔑 Default Token: {token}")
+                    print(f"\n💡 Use this token for webhook authentication:")
+                    print(f"   Authorization: Bearer {token}")
+                    
+                    # Show current webhook URL with token
+                    active_tunnel = self.system_status.get_active_tunnel()
+                    if active_tunnel:
+                        status = active_tunnel.get_status()
+                        if status.get('url'):
+                            webhook_url = status['url']
+                            print(f"\n🌐 Ready-to-use Webhook URL:")
+                            print(f"   {webhook_url}/print")
+                            print(f"   Header: Authorization: Bearer {token}")
+                else:
+                    print("❌ Default token not found in logs")
+                    print("💡 Generate a new token using option 2")
+            else:
+                print("❌ Failed to read container logs")
+                
+        except Exception as e:
+            print(f"❌ Error retrieving token: {e}")
+    
+    def _update_webhook_url_with_token(self, token):
+        """Update internal webhook URL tracking with token."""
+        # This method can be enhanced to update stored webhook configurations
+        pass

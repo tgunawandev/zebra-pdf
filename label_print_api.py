@@ -2,15 +2,26 @@
 """
 Label Printing API Server
 Local HTTP server that receives print requests from Odoo (cloud) and prints to local Zebra printer.
+Secured with Bearer token authentication.
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 import logging
 import subprocess
 from datetime import datetime
 import os
+import sys
+
+# Add the zebra_print module to path
+sys.path.insert(0, '/app')
+from zebra_print.auth.token_manager import TokenManager
+from zebra_print.auth.middleware import AuthMiddleware
 
 app = Flask(__name__)
+
+# Initialize authentication
+token_manager = TokenManager()
+auth_middleware = AuthMiddleware(token_manager)
 
 # Configure logging
 logging.basicConfig(
@@ -126,6 +137,7 @@ def health_check():
     })
 
 @app.route('/print', methods=['POST'])
+@auth_middleware.require_auth
 def print_labels():
     """
     Main endpoint to receive print requests from Odoo.
@@ -198,6 +210,7 @@ def print_labels():
         }), 500
 
 @app.route('/printer/status', methods=['GET'])
+@auth_middleware.require_auth
 def printer_status():
     """Check printer status."""
     try:
@@ -224,12 +237,137 @@ def printer_status():
             "details": str(e)
         }), 500
 
+@app.route('/auth/token', methods=['POST'])
+def generate_token():
+    """Generate a new API token. (Admin endpoint - no auth required for initial setup)"""
+    try:
+        data = request.get_json() if request.is_json else {}
+        name = data.get('name', 'default')
+        description = data.get('description')
+        
+        # Check if this is initial setup or if there's only one default token
+        existing_tokens = token_manager.get_all_tokens()
+        needs_auth = len(existing_tokens) > 1  # Allow first additional token without auth
+        
+        if needs_auth:
+            # If multiple tokens exist, require authentication
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({
+                    'error': 'Authentication required',
+                    'message': 'Token generation requires valid API token for security'
+                }), 401
+            
+            token = auth_header[7:]
+            is_valid, _ = token_manager.validate_token(token)
+            if not is_valid:
+                return jsonify({
+                    'error': 'Invalid token',
+                    'message': 'Invalid or revoked API token'
+                }), 401
+        
+        # Generate new token
+        new_token = token_manager.generate_token(name, description)
+        
+        return jsonify({
+            'success': True,
+            'token': new_token,
+            'name': name,
+            'message': 'Token generated successfully',
+            'webhook_examples': {
+                'header': f'Authorization: Bearer {new_token}',
+                'query': f'/print?token={new_token}',
+                'body': f'{{"token": "{new_token}", "labels": [...]}}'
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Token generation failed',
+            'details': str(e)
+        }), 500
+
+@app.route('/auth/tokens', methods=['GET'])
+@auth_middleware.require_auth  
+def list_tokens():
+    """List all API tokens (without revealing token values)."""
+    try:
+        tokens = token_manager.get_all_tokens()
+        return jsonify({
+            'success': True,
+            'tokens': tokens,
+            'current_token': g.current_token
+        })
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to list tokens',
+            'details': str(e)
+        }), 500
+
+@app.route('/auth/token/<name>', methods=['DELETE'])
+@auth_middleware.require_auth
+def revoke_token(name):
+    """Revoke a token by name."""
+    try:
+        success = token_manager.revoke_token(name)
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Token "{name}" revoked successfully'
+            })
+        else:
+            return jsonify({
+                'error': 'Token not found',
+                'message': f'No token named "{name}" found'
+            }), 404
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to revoke token',
+            'details': str(e)
+        }), 500
+
+@app.route('/auth/info', methods=['GET'])
+def auth_info():
+    """Get authentication information and token count."""
+    try:
+        tokens = token_manager.get_all_tokens()
+        active_tokens = [t for t in tokens if t['is_active']]
+        
+        return jsonify({
+            'authentication_enabled': True,
+            'total_tokens': len(tokens),
+            'active_tokens': len(active_tokens),
+            'tokens': tokens,
+            'endpoints': {
+                'protected': ['/print', '/printer/status', '/auth/tokens'],
+                'public': ['/health', '/auth/info', '/auth/token'],
+                'auth_methods': ['Authorization: Bearer token', 'Query: ?token=', 'Body: {"token": ""}']
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get auth info',
+            'details': str(e)
+        }), 500
+
 if __name__ == '__main__':
     logging.info("🚀 Starting Label Printing API Server")
     logging.info(f"📱 Printer: {PRINTER_NAME}")
     logging.info("🔗 Endpoints:")
-    logging.info("   POST /print - Print labels")
-    logging.info("   GET /health - Health check")
-    logging.info("   GET /printer/status - Printer status")
+    logging.info("   POST /print - Print labels (🔐 AUTH REQUIRED)")
+    logging.info("   GET /health - Health check (public)")
+    logging.info("   GET /printer/status - Printer status (🔐 AUTH REQUIRED)")
+    logging.info("   POST /auth/token - Generate API token")
+    logging.info("   GET /auth/tokens - List tokens (🔐 AUTH REQUIRED)")
+    logging.info("   DELETE /auth/token/<name> - Revoke token (🔐 AUTH REQUIRED)")
+    
+    # Ensure default token exists on startup
+    tokens = token_manager.get_all_tokens()
+    if not tokens:
+        default_token = token_manager.generate_token("default", "Default API access token")
+        logging.info(f"🔑 Generated default API token: {default_token}")
+        logging.info("🔐 SAVE THIS TOKEN - you'll need it for webhook authentication!")
+    else:
+        logging.info("🔐 API authentication enabled - tokens required for protected endpoints")
     
     app.run(host='0.0.0.0', port=5000, debug=False)
