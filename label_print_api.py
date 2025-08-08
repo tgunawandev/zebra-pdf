@@ -81,20 +81,20 @@ def json_to_zpl(label_data):
             "^LL236",        # Set label length to 236 dots (30mm)
             "^PW394",        # Set print width to 394 dots (50mm) 
             "^LH0,0",        # Set label home position (top-left)
-            "^LT0",          # Set label top margin to 0
+            "^LT20",         # Set label top margin to 20 dots for spacing
             "^PR2",          # Set print speed to 2 inches/second (slower for accuracy)
             "^MD5",          # Set media darkness to 5 (medium)
             "^JMA",          # Set media type to auto-detect
             
-            # LARGER QR code - increased size parameter from 5 to 7
-            f"^FO20,20^BQN,2,7^FDLA,{label['qr_code']}^FS",
+            # LARGER QR code with top margin
+            f"^FO20,40^BQN,2,7^FDLA,{label['qr_code']}^FS",
             
-            # ALL TEXT SHIFTED RIGHT WITH 15x15 SIZE (+1 from previous)
-            f"^FO200,25^A0N,15,15^FD{label['do_number']}^FS",      # DO Number
-            f"^FO200,45^A0N,15,15^FD{label['date']}^FS",           # Date
-            f"^FO200,65^A0N,15,15^FD{label['item']}^FS",           # Item
-            f"^FO200,85^A0N,15,15^FD{label['mo_number']}^FS",      # MO Number
-            f"^FO200,105^A0N,13,13^FD{label['qr_code']}^FS",       # QR code number (smaller)
+            # TEXT CLOSER TO QR CODE WITH 16x16 SIZE (+1 again)
+            f"^FO160,40^A0N,16,16^FD{label['do_number']}^FS",      # DO Number
+            f"^FO160,58^A0N,16,16^FD{label['date']}^FS",           # Date
+            f"^FO160,76^A0N,16,16^FD{label['item']}^FS",           # Item
+            f"^FO160,94^A0N,16,16^FD{label['mo_number']}^FS",      # MO Number
+            f"^FO160,112^A0N,14,14^FD{label['qr_code']}^FS",       # QR code number (smaller)
             
             "^XZ"            # End format
         ])
