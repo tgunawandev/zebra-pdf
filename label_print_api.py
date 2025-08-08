@@ -86,15 +86,15 @@ def json_to_zpl(label_data):
             "^MD5",          # Set media darkness to 5 (medium)
             "^JMA",          # Set media type to auto-detect
             
-            # LARGER QR code with small top margin
-            f"^FO20,25^BQN,2,7^FDLA,{label['qr_code']}^FS",
+            # QR code with specified positioning
+            f"^FO22,25^BQN,2,7^FDLA,{label['qr_code']}^FS",
             
-            # TEXT ALIGNED WITH QR CODE AND PROPER LINE SPACING (30-dot intervals for 16x16 text)
-            f"^FO160,25^A0N,16,16^FD{label['do_number']}^FS",      # DO Number (same Y as QR)
-            f"^FO160,55^A0N,16,16^FD{label['date']}^FS",           # Date (+30)
-            f"^FO160,85^A0N,16,16^FD{label['item']}^FS",           # Item (+30)
-            f"^FO160,115^A0N,16,16^FD{label['mo_number']}^FS",     # MO Number (+30)
-            f"^FO160,145^A0N,14,14^FD{label['qr_code']}^FS",       # QR code number (+30, smaller)
+            # TEXT FIELDS WITH EXACT SPECIFIED POSITIONS
+            f"^FO170,30^A0N,16,16^FD{label['do_number']}^FS",      # DO Number
+            f"^FO170,55^A0N,16,16^FD{label['date']}^FS",           # Date
+            f"^FO170,80^A0N,16,16^FD{label['item']}^FS",           # Item
+            f"^FO170,105^A0N,16,16^FD{label['mo_number']}^FS",     # MO Number
+            f"^FO170,125^A0N,14,14^FD{label['qr_code']}^FS",       # QR code number (smaller)
             
             "^XZ"            # End format
         ])
