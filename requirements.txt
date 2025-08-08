@@ -1,2 +1,22 @@
+# Core API server dependencies
 flask==3.0.0
 werkzeug==3.0.1
+
+# HTTP client for API calls and testing
+requests>=2.31.0
+
+# Image processing (for QR codes and label processing)
+Pillow>=10.0.0
+
+# QR code generation (if needed for testing)
+qrcode>=7.4.2
+
+# YAML parsing (for ngrok config)
+PyYAML>=6.0
+
+# Optional: For more advanced queue systems
+# sqlite3 is included in Python standard library
+
+# Optional: For production deployment
+# gunicorn>=21.2.0
+# supervisor>=4.2.5

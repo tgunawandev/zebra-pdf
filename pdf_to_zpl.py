@@ -87,31 +87,42 @@ def convert_text_to_zpl(text_lines: list) -> str:
         zpl_commands.append("^XA")
         zpl_commands.append("^JUS")      # Auto-detect label length
         zpl_commands.append("^MMT")      # Set media type to thermal transfer
+        zpl_commands.append("^MNY")      # Set continuous media
+        zpl_commands.append("^MTT")      # Set media type to thermal transfer
+        zpl_commands.append("^PON")      # Print orientation normal
+        zpl_commands.append("^PMN")      # Print mode normal
+        zpl_commands.append("^LRN")      # Label reverse normal
+        zpl_commands.append("^CI0")      # Change international font/encoding
         zpl_commands.append("^XZ")
         zpl_commands.append("")  # Blank line separator
     
     for i, label in enumerate(labels):
         zpl_commands.append("^XA")  # Start format
         
-        # LABEL POSITIONING CONSISTENCY COMMANDS
+        # CALIBRATION AND POSITIONING COMMANDS FOR CONSISTENT LABEL PLACEMENT
         zpl_commands.append("^LL236")     # Set label length to 236 dots (30mm)
         zpl_commands.append("^PW394")     # Set print width to 394 dots (50mm) 
         zpl_commands.append("^LH0,0")     # Set label home position (top-left)
         zpl_commands.append("^LT0")       # Set label top margin to 0
+        zpl_commands.append("^PR2")       # Set print speed to 2 inches/second (slower for accuracy)
+        zpl_commands.append("^MD5")       # Set media darkness to 5 (medium)
+        zpl_commands.append("^JMA")       # Set media type to auto-detect
         
-        # QR code with working format and LARGER size for better scanning
-        zpl_commands.append(f"^FO30,30^BQN,2,6^FDLA,{label['qr_code']}^FS")
+        # QR code with working format and consistent size
+        zpl_commands.append(f"^FO30,30^BQN,2,5^FDLA,{label['qr_code']}^FS")
         
+        # ALL TEXT WITH SAME SIZE (16x16) FOR CONSISTENCY
         # Text positioned after QR code with proper spacing
-        # QR size 6 = 120 dots width, so text starts at 30 + 120 + 10 = 160
-        # Title - positioned to fit alongside larger QR
-        zpl_commands.append(f"^FO160,35^A0N,18,18^FD{label['title']}^FS")
+        # QR size 5 = 100 dots width, so text starts at 30 + 100 + 15 = 145
         
-        # Date
-        zpl_commands.append(f"^FO160,60^A0N,16,16^FD{label['date']}^FS")
+        # Title - using consistent 16x16 font size
+        zpl_commands.append(f"^FO145,35^A0N,16,16^FD{label['title']}^FS")
         
-        # QR code number at bottom
-        zpl_commands.append(f"^FO160,85^A0N,14,14^FD{label['qr_code']}^FS")
+        # Date - using consistent 16x16 font size
+        zpl_commands.append(f"^FO145,60^A0N,16,16^FD{label['date']}^FS")
+        
+        # QR code number - using consistent 16x16 font size
+        zpl_commands.append(f"^FO145,85^A0N,16,16^FD{label['qr_code']}^FS")
         
         zpl_commands.append("^XZ")  # End format
         

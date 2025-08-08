@@ -1,0 +1,115 @@
+2025-08-08 20:11:59,033 - INFO - 🔄 Converting 1 labels to ZPL
+2025-08-08 20:11:59,033 - INFO - ✅ Generated ZPL with 1 labels
+2025-08-08 20:13:33,230 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 20:13:33,231 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:13:33,231 - INFO - 🔗 Endpoints:
+2025-08-08 20:13:33,231 - INFO -    POST /print - Print labels
+2025-08-08 20:13:33,231 - INFO -    GET /health - Health check
+2025-08-08 20:13:33,231 - INFO -    GET /printer/status - Printer status
+2025-08-08 20:14:00,209 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 20:14:00,209 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:14:00,209 - INFO - 🔗 Endpoints:
+2025-08-08 20:14:00,209 - INFO -    POST /print - Print labels
+2025-08-08 20:14:00,209 - INFO -    GET /health - Health check
+2025-08-08 20:14:00,209 - INFO -    GET /printer/status - Printer status
+2025-08-08 20:14:39,012 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 20:14:39,012 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:14:39,012 - INFO - 🔗 Endpoints:
+2025-08-08 20:14:39,012 - INFO -    POST /print - Print labels
+2025-08-08 20:14:39,012 - INFO -    GET /health - Health check
+2025-08-08 20:14:39,012 - INFO -    GET /printer/status - Printer status
+2025-08-08 20:15:05,309 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 20:15:05,309 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:15:05,309 - INFO - 🔗 Endpoints:
+2025-08-08 20:15:05,309 - INFO -    POST /print - Print labels
+2025-08-08 20:15:05,309 - INFO -    GET /health - Health check
+2025-08-08 20:15:05,310 - INFO -    GET /printer/status - Printer status
+2025-08-08 20:16:08,012 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 20:16:08,012 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:16:08,012 - INFO - 🔗 Endpoints:
+2025-08-08 20:16:08,012 - INFO -    POST /print - Print labels
+2025-08-08 20:16:08,012 - INFO -    GET /health - Health check
+2025-08-08 20:16:08,012 - INFO -    GET /printer/status - Printer status
+2025-08-08 20:16:08,013 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.110:5000
+2025-08-08 20:16:08,013 - INFO - [33mPress CTRL+C to quit[0m
+2025-08-08 20:16:19,606 - INFO - 🚀 Starting Label Printing API Server
+2025-08-08 20:16:19,606 - INFO - 📱 Printer: ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:16:19,607 - INFO - 🔗 Endpoints:
+2025-08-08 20:16:19,607 - INFO -    POST /print - Print labels
+2025-08-08 20:16:19,607 - INFO -    GET /health - Health check
+2025-08-08 20:16:19,607 - INFO -    GET /printer/status - Printer status
+2025-08-08 20:16:19,608 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.110:5000
+2025-08-08 20:16:19,608 - INFO - [33mPress CTRL+C to quit[0m
+2025-08-08 20:16:46,099 - INFO - 127.0.0.1 - - [08/Aug/2025 20:16:46] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:16:46,105 - INFO - 📨 Received print request for 1 labels
+2025-08-08 20:16:46,105 - INFO - 🔄 Converting 1 labels to ZPL
+2025-08-08 20:16:46,105 - INFO - ✅ Generated ZPL with 1 labels
+2025-08-08 20:16:46,105 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:16:46,126 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-738 (0 file(s))
+2025-08-08 20:16:46,127 - INFO - ✅ Print request completed successfully
+2025-08-08 20:16:46,127 - INFO - 127.0.0.1 - - [08/Aug/2025 20:16:46] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:23:15,346 - INFO - 127.0.0.1 - - [08/Aug/2025 20:23:15] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:23:15,357 - INFO - 127.0.0.1 - - [08/Aug/2025 20:23:15] "GET /printer/status HTTP/1.1" 200 -
+2025-08-08 20:24:36,343 - INFO - 127.0.0.1 - - [08/Aug/2025 20:24:36] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:25:21,392 - INFO - 📨 Received print request for 2 labels
+2025-08-08 20:25:21,392 - INFO - 🔄 Converting 2 labels to ZPL
+2025-08-08 20:25:21,392 - INFO - ✅ Generated ZPL with 2 labels
+2025-08-08 20:25:21,392 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:25:21,400 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-739 (0 file(s))
+2025-08-08 20:25:21,400 - INFO - ✅ Print request completed successfully
+2025-08-08 20:25:21,400 - INFO - 127.0.0.1 - - [08/Aug/2025 20:25:21] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:28:57,993 - INFO - 📨 Received print request for 1 labels
+2025-08-08 20:28:57,993 - INFO - 🔄 Converting 1 labels to ZPL
+2025-08-08 20:28:57,993 - INFO - ✅ Generated ZPL with 1 labels
+2025-08-08 20:28:57,993 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:28:58,000 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-742 (0 file(s))
+2025-08-08 20:28:58,001 - INFO - ✅ Print request completed successfully
+2025-08-08 20:28:58,001 - INFO - 127.0.0.1 - - [08/Aug/2025 20:28:58] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:29:21,524 - INFO - 📨 Received print request for 2 labels
+2025-08-08 20:29:21,524 - INFO - 🔄 Converting 2 labels to ZPL
+2025-08-08 20:29:21,524 - INFO - ✅ Generated ZPL with 2 labels
+2025-08-08 20:29:21,524 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:29:21,536 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-743 (0 file(s))
+2025-08-08 20:29:21,536 - INFO - ✅ Print request completed successfully
+2025-08-08 20:29:21,537 - INFO - 127.0.0.1 - - [08/Aug/2025 20:29:21] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:32:15,493 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:15] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:15,497 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:15] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:16,553 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:16] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:16,555 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:16] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:21,377 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:21] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:21,382 - INFO - 📨 Received print request for 1 labels
+2025-08-08 20:32:21,383 - INFO - 🔄 Converting 1 labels to ZPL
+2025-08-08 20:32:21,383 - INFO - ✅ Generated ZPL with 1 labels
+2025-08-08 20:32:21,383 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:32:21,402 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-744 (0 file(s))
+2025-08-08 20:32:21,402 - INFO - ✅ Print request completed successfully
+2025-08-08 20:32:21,403 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:21] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:32:34,248 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:34] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:34,252 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:34] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:39,077 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:39] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:39,083 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:39] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:41,233 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:41] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:42,619 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:42] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:32:42,623 - INFO - 127.0.0.1 - - [08/Aug/2025 20:32:42] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:34:01,799 - INFO - 127.0.0.1 - - [08/Aug/2025 20:34:01] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:34:22,198 - INFO - 127.0.0.1 - - [08/Aug/2025 20:34:22] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:34:23,844 - INFO - 127.0.0.1 - - [08/Aug/2025 20:34:23] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:34:23,847 - INFO - 127.0.0.1 - - [08/Aug/2025 20:34:23] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:38:46,796 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:46] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:38:46,801 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:46] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:38:50,319 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:50] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:38:50,323 - INFO - 📨 Received print request for 1 labels
+2025-08-08 20:38:50,323 - INFO - 🔄 Converting 1 labels to ZPL
+2025-08-08 20:38:50,323 - INFO - ✅ Generated ZPL with 1 labels
+2025-08-08 20:38:50,323 - INFO - 🖨️  Sending ZPL to ZTC-ZD230-203dpi-ZPL
+2025-08-08 20:38:50,337 - INFO - ✅ ZPL printed successfully: request id is ZTC-ZD230-203dpi-ZPL-745 (0 file(s))
+2025-08-08 20:38:50,337 - INFO - ✅ Print request completed successfully
+2025-08-08 20:38:50,337 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:50] "POST /print HTTP/1.1" 200 -
+2025-08-08 20:38:54,600 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:54] "GET /health HTTP/1.1" 200 -
+2025-08-08 20:38:54,604 - INFO - 127.0.0.1 - - [08/Aug/2025 20:38:54] "GET /health HTTP/1.1" 200 -
