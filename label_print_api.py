@@ -89,12 +89,12 @@ def json_to_zpl(label_data):
             # LARGER QR code with small top margin
             f"^FO20,25^BQN,2,7^FDLA,{label['qr_code']}^FS",
             
-            # TEXT CLOSER TO QR CODE WITH PROPER SPACING
-            f"^FO160,25^A0N,16,16^FD{label['do_number']}^FS",      # DO Number
-            f"^FO160,45^A0N,16,16^FD{label['date']}^FS",           # Date
-            f"^FO160,65^A0N,16,16^FD{label['item']}^FS",           # Item
-            f"^FO160,85^A0N,16,16^FD{label['mo_number']}^FS",      # MO Number
-            f"^FO160,105^A0N,14,14^FD{label['qr_code']}^FS",       # QR code number (smaller)
+            # TEXT ALIGNED WITH QR CODE AND PROPER LINE SPACING (22-dot intervals)
+            f"^FO160,25^A0N,16,16^FD{label['do_number']}^FS",      # DO Number (same Y as QR)
+            f"^FO160,47^A0N,16,16^FD{label['date']}^FS",           # Date (+22)
+            f"^FO160,69^A0N,16,16^FD{label['item']}^FS",           # Item (+22)
+            f"^FO160,91^A0N,16,16^FD{label['mo_number']}^FS",      # MO Number (+22)
+            f"^FO160,113^A0N,14,14^FD{label['qr_code']}^FS",       # QR code number (+22, smaller)
             
             "^XZ"            # End format
         ])
