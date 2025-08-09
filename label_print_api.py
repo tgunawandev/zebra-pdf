@@ -13,7 +13,7 @@ import os
 import sys
 
 # Add the zebra_print module to path
-sys.path.insert(0, '/app')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from zebra_print.auth.token_manager import TokenManager
 from zebra_print.auth.middleware import AuthMiddleware
 
@@ -33,7 +33,7 @@ logging.basicConfig(
     ]
 )
 
-PRINTER_NAME = "ZTC-ZD230-203dpi-ZPL"
+PRINTER_NAME = "ZDesigner ZD230-203dpi ZPL"
 
 def json_to_zpl(label_data):
     """
@@ -119,7 +119,11 @@ def print_to_zebra(zpl_commands):
         logging.info(f"[PRINTER] Sending ZPL to {PRINTER_NAME}")
         
         # Import and use the cross-platform printer system
-        from zebra_print.printer import get_zebra_printer
+        try:
+            from zebra_print.printer import get_zebra_printer
+        except ImportError as import_error:
+            logging.error(f"[ERROR] Failed to import zebra_print.printer: {import_error}")
+            return False, f"Printer module import failed: {import_error}. Check Python path and zebra_print installation."
         
         printer_service = get_zebra_printer(PRINTER_NAME)
         success, message = printer_service.print_zpl(zpl_commands)
@@ -232,7 +236,16 @@ def print_labels():
 def printer_status():
     """Check printer status using cross-platform approach."""
     try:
-        from zebra_print.printer import get_zebra_printer
+        try:
+            from zebra_print.printer import get_zebra_printer
+        except ImportError as import_error:
+            logging.error(f"[ERROR] Failed to import zebra_print.printer: {import_error}")
+            return jsonify({
+                "printer": PRINTER_NAME,
+                "status": "error",
+                "details": f"Printer module import failed: {import_error}",
+                "timestamp": datetime.now().isoformat()
+            }), 500
         
         printer_service = get_zebra_printer(PRINTER_NAME)
         status = printer_service.get_status()
