@@ -247,15 +247,22 @@ class ZebraWindowsPrinter(PrinterService):
                 temp_file_path = temp_file.name
             
             try:
-                # Method 1: Try copy command (raw printing)
-                cmd = f'copy "{temp_file_path}" "\\\\localhost\\{self._printer_name}"'
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                # First check if this is a USB printer
+                is_usb_printer = self._is_usb_printer()
                 
-                if result.returncode == 0:
-                    return True, "ZPL sent to printer successfully via copy command"
+                if is_usb_printer:
+                    # For USB printers, skip copy command and use Windows print methods
+                    return self._try_usb_printer_methods(zpl_content, temp_file_path)
                 else:
-                    # Method 2: Try direct printer port (if copy fails)
-                    return self._try_direct_printer_port(zpl_content, temp_file_path)
+                    # Method 1: Try copy command for network printers
+                    cmd = f'copy "{temp_file_path}" "\\\\localhost\\{self._printer_name}"'
+                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                    
+                    if result.returncode == 0:
+                        return True, "ZPL sent to printer successfully via copy command"
+                    else:
+                        # Fallback to other methods
+                        return self._try_direct_printer_port(zpl_content, temp_file_path)
                     
             finally:
                 # Clean up temporary file
@@ -266,6 +273,91 @@ class ZebraWindowsPrinter(PrinterService):
                     
         except Exception as e:
             return False, f"Print error: {str(e)}"
+    
+    def _is_usb_printer(self) -> bool:
+        """Check if the printer is connected via USB."""
+        try:
+            cmd = [
+                "powershell", "-Command",
+                f"Get-Printer -Name '{self._printer_name}' | Select-Object PortName"
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if result.returncode == 0:
+                return "USB" in result.stdout.upper()
+            return False
+        except:
+            return False
+    
+    def _try_usb_printer_methods(self, zpl_content: str, temp_file_path: str) -> Tuple[bool, str]:
+        """Try USB printer-specific printing methods."""
+        
+        # Method 1: Windows print command (works better for USB)
+        try:
+            print_cmd = f'print /D:"{self._printer_name}" "{temp_file_path}"'
+            result = subprocess.run(print_cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if result.returncode == 0:
+                return True, "ZPL sent to USB printer successfully via print command"
+        except Exception as e:
+            pass
+        
+        # Method 2: Try PowerShell with raw bytes
+        try:
+            # Write ZPL as binary to ensure raw printing
+            binary_file = temp_file_path + ".bin"
+            with open(binary_file, 'wb') as f:
+                f.write(zpl_content.encode('utf-8'))
+            
+            ps_cmd = [
+                "powershell", "-Command",
+                f"$bytes = [System.IO.File]::ReadAllBytes('{binary_file}'); $bytes | Out-Printer -Name '{self._printer_name}'"
+            ]
+            ps_result = subprocess.run(ps_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            # Clean up binary file
+            try:
+                os.unlink(binary_file)
+            except:
+                pass
+            
+            if ps_result.returncode == 0:
+                return True, "ZPL sent to USB printer successfully via PowerShell raw printing"
+        except Exception as e:
+            pass
+        
+        # Method 3: Try Python win32print if available
+        try:
+            import win32print
+            import win32api
+            
+            # Get printer handle
+            printer_handle = win32print.OpenPrinter(self._printer_name)
+            
+            try:
+                # Start print job
+                job_id = win32print.StartDocPrinter(printer_handle, 1, ("ZPL Label", None, "RAW"))
+                win32print.StartPagePrinter(printer_handle)
+                
+                # Send raw ZPL data
+                win32print.WritePrinter(printer_handle, zpl_content.encode('utf-8'))
+                
+                # End print job
+                win32print.EndPagePrinter(printer_handle)
+                win32print.EndDocPrinter(printer_handle)
+                
+                return True, "ZPL sent to USB printer successfully via win32print"
+            finally:
+                win32print.ClosePrinter(printer_handle)
+                
+        except ImportError:
+            # win32print not available
+            pass
+        except Exception as e:
+            pass
+        
+        # All methods failed
+        return False, f"All USB printing methods failed. Printer may not support raw ZPL printing or needs driver reconfiguration."
     
     def _try_direct_printer_port(self, zpl_content: str, temp_file_path: str) -> Tuple[bool, str]:
         """Try alternative printing methods when copy command fails."""
