@@ -59,8 +59,8 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-if not exist "%SCRIPT_DIR%zebra_print_control.py" (
-    echo ERROR: zebra_print_control.py not found in current directory
+if not exist "%SCRIPT_DIR%zebra_print" (
+    echo ERROR: zebra_print directory not found in current directory
     echo Please ensure all Python files are present
     exit /b 1
 )
@@ -84,7 +84,7 @@ if %errorlevel% equ 0 (
 )
 
 echo Starting Python application...
-start "Zebra Print Control" python zebra_print_control.py
+start "Zebra Print Control" python -m zebra_print.main
 
 timeout /t 3 >nul
 
@@ -192,7 +192,7 @@ echo Starting Python control panel...
 call :check_requirements
 if %errorlevel% neq 0 exit /b 1
 
-python zebra_print_control.py
+python -m zebra_print.main
 goto :eof
 
 :interactive_setup
@@ -211,7 +211,7 @@ if %errorlevel% neq 0 (
 )
 
 echo Starting setup wizard...
-python zebra_print_control.py
+python -m zebra_print.main
 goto :eof
 
 :configure_domain
