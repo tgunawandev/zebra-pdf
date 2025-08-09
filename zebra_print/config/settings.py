@@ -17,7 +17,7 @@ class AppSettings:
     api_script_path: str = ""  # Will be set dynamically
     
     # Printer Settings
-    printer_name: str = "ZTC-ZD230-203dpi-ZPL"
+    printer_name: str = "ZDesigner ZD230-203dpi ZPL"
     
     # Tunnel Settings
     tunnel_name: str = "zebra-printer"
