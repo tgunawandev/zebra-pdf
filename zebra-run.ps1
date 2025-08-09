@@ -18,7 +18,7 @@ $DefaultEnvFile = ".env"
 function Write-Banner {
     Write-Host ""
     Write-Host "╔══════════════════════════════════════════════╗" -ForegroundColor Magenta
-    Write-Host "║         🦓 ZEBRA PRINT CONTROL SYSTEM        ║" -ForegroundColor Magenta
+    Write-Host "║          ZEBRA PRINT CONTROL SYSTEM          ║" -ForegroundColor Magenta
     Write-Host "║              Quick Run (Docker Hub)          ║" -ForegroundColor Magenta
     Write-Host "╚══════════════════════════════════════════════╝" -ForegroundColor Magenta
     Write-Host ""
@@ -32,9 +32,9 @@ function Show-Help {
     Write-Host "Usage:" -ForegroundColor Yellow
     Write-Host "  .\zebra-run.ps1                          - Download and run the system"
     Write-Host "  .\zebra-run.ps1 -Setup                   - Run with interactive setup after start"
-    Write-Host "  .\zebra-run.ps1 -EnvFile <file>          - Use custom environment file"
-    Write-Host "  .\zebra-run.ps1 -Domain <domain>         - Set tunnel domain directly"
-    Write-Host "  .\zebra-run.ps1 -Tunnel <type>           - Set tunnel type (cloudflare/ngrok)"
+    Write-Host "  .\zebra-run.ps1 -EnvFile [file]          - Use custom environment file"
+    Write-Host "  .\zebra-run.ps1 -Domain [domain]         - Set tunnel domain directly"
+    Write-Host "  .\zebra-run.ps1 -Tunnel [type]           - Set tunnel type (cloudflare/ngrok)"
     Write-Host "  .\zebra-run.ps1 -Help                    - Show this help"
     Write-Host ""
     Write-Host "Environment Variables:" -ForegroundColor Yellow
@@ -61,7 +61,7 @@ function Load-EnvFile {
     $envPath = if ($EnvFile) { $EnvFile } else { $DefaultEnvFile }
     
     if (Test-Path $envPath) {
-        Write-Host "📁 Loading environment from: $envPath" -ForegroundColor Blue
+        Write-Host "[LOAD] Loading environment from: $envPath" -ForegroundColor Blue
         
         Get-Content $envPath | ForEach-Object {
             $line = $_.Trim()
@@ -80,18 +80,18 @@ function Load-EnvFile {
             }
         }
     } elseif ($EnvFile) {
-        Write-Host "⚠️ Environment file not found: $envPath" -ForegroundColor Yellow
+        Write-Host "WARNING: Environment file not found: $envPath" -ForegroundColor Yellow
     }
 }
 
 function Test-DockerInstalled {
     try {
         docker --version | Out-Null
-        Write-Host "✅ Docker detected" -ForegroundColor Green
+        Write-Host "[OK] Docker detected" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "❌ Docker is not installed or not running" -ForegroundColor Red
+        Write-Host "[ERROR] Docker is not installed or not running" -ForegroundColor Red
         Write-Host "Please install Docker Desktop: https://docs.docker.com/desktop/windows/"
         Read-Host "Press Enter to exit"
         exit 1
@@ -101,7 +101,7 @@ function Test-DockerInstalled {
 function Stop-ExistingContainer {
     $existing = docker ps -a --filter "name=$ContainerName" --format "{{.Names}}" 2>$null
     if ($existing -eq $ContainerName) {
-        Write-Host "🛑 Stopping existing container..." -ForegroundColor Blue
+        Write-Host "[STOP] Stopping existing container..." -ForegroundColor Blue
         docker stop $ContainerName 2>$null | Out-Null
         docker rm $ContainerName 2>$null | Out-Null
     }
@@ -145,10 +145,10 @@ function Build-DockerEnvArgs {
 }
 
 function Start-ZebraSystem {
-    Write-Host "📥 Pulling latest image from Docker Hub..." -ForegroundColor Blue
+    Write-Host "[PULL] Pulling latest image from Docker Hub..." -ForegroundColor Blue
     docker pull $DockerImage
     
-    Write-Host "🚀 Starting Zebra Print Control System..." -ForegroundColor Blue
+    Write-Host "[START] Starting Zebra Print Control System..." -ForegroundColor Blue
     
     # Build environment arguments
     $envArgs = Build-DockerEnvArgs
@@ -158,7 +158,7 @@ function Start-ZebraSystem {
     $tunnelValue = if ($Tunnel) { $Tunnel } else { $env:ZEBRA_TUNNEL_TYPE }
     
     if ($domainValue -or $tunnelValue) {
-        Write-Host "🔧 Configuration:" -ForegroundColor Cyan
+        Write-Host "[CONFIG] Configuration:" -ForegroundColor Cyan
         if ($domainValue) { Write-Host "  • Domain: $domainValue" }
         if ($tunnelValue) { Write-Host "  • Tunnel: $tunnelValue" }
     }
@@ -166,7 +166,7 @@ function Start-ZebraSystem {
     # Create network if it doesn't exist
     $networkExists = docker network ls --filter "name=zebra-print-network" --format "{{.Name}}" 2>$null
     if ($networkExists -ne "zebra-print-network") {
-        Write-Host "🌐 Creating zebra-print-network..." -ForegroundColor Blue
+        Write-Host "[NETWORK] Creating zebra-print-network..." -ForegroundColor Blue
         docker network create zebra-print-network | Out-Null
     }
     
@@ -194,7 +194,7 @@ function Start-ZebraSystem {
     $result = & docker @dockerArgs
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Failed to start container" -ForegroundColor Red
+        Write-Host "[ERROR] Failed to start container" -ForegroundColor Red
         Read-Host "Press Enter to exit"
         exit 1
     }
@@ -208,23 +208,23 @@ function Start-Tunnel {
         return $false  # No tunnel configuration
     }
     
-    Write-Host "🚀 Starting $tunnelValue tunnel for $domainValue..." -ForegroundColor Blue
+    Write-Host "[TUNNEL] Starting $tunnelValue tunnel for $domainValue..." -ForegroundColor Blue
     
     if ($tunnelValue -eq "cloudflare" -and $env:CLOUDFLARE_TOKEN) {
         # Start Cloudflare tunnel
         docker exec -d $ContainerName bash -c "cloudflared tunnel --url http://127.0.0.1:5000 run --token $($env:CLOUDFLARE_TOKEN) > /var/log/cloudflare.log 2>&1"
         
         # Wait for tunnel to establish
-        Write-Host "⏳ Establishing tunnel connections..." -ForegroundColor Yellow
+        Write-Host "[WAIT] Establishing tunnel connections..." -ForegroundColor Yellow
         Start-Sleep -Seconds 8
         
         # Check if tunnel process is running
         $tunnelRunning = docker exec $ContainerName bash -c "ps aux | grep -q '[c]loudflared'; echo `$?"
         if ($tunnelRunning -eq "0") {
-            Write-Host "✅ Cloudflare tunnel started" -ForegroundColor Green
+            Write-Host "[OK] Cloudflare tunnel started" -ForegroundColor Green
             return $true
         } else {
-            Write-Host "❌ Cloudflare tunnel failed to start" -ForegroundColor Red
+            Write-Host "[ERROR] Cloudflare tunnel failed to start" -ForegroundColor Red
             return $false
         }
         
@@ -232,19 +232,19 @@ function Start-Tunnel {
         # Start Ngrok tunnel
         docker exec -d $ContainerName bash -c "ngrok http 5000 --authtoken=$($env:NGROK_AUTHTOKEN) > /var/log/ngrok.log 2>&1"
         
-        Write-Host "⏳ Starting ngrok tunnel..." -ForegroundColor Yellow
+        Write-Host "[WAIT] Starting ngrok tunnel..." -ForegroundColor Yellow
         Start-Sleep -Seconds 5
         
         $tunnelRunning = docker exec $ContainerName bash -c "ps aux | grep -q '[n]grok'; echo `$?"
         if ($tunnelRunning -eq "0") {
-            Write-Host "✅ Ngrok tunnel started" -ForegroundColor Green
+            Write-Host "[OK] Ngrok tunnel started" -ForegroundColor Green
             return $true
         } else {
-            Write-Host "❌ Ngrok tunnel failed to start" -ForegroundColor Red
+            Write-Host "[ERROR] Ngrok tunnel failed to start" -ForegroundColor Red
             return $false
         }
     } else {
-        Write-Host "⚠️ Tunnel configuration incomplete" -ForegroundColor Yellow
+        Write-Host "[WARNING] Tunnel configuration incomplete" -ForegroundColor Yellow
         Write-Host "  • Type: $tunnelValue"
         $tokenPresent = if ($env:CLOUDFLARE_TOKEN -or $env:NGROK_AUTHTOKEN) { "Present" } else { "Missing" }
         Write-Host "  • Token: $tokenPresent"
@@ -259,7 +259,7 @@ function Test-Tunnel {
         return $true  # No tunnel to verify
     }
     
-    Write-Host "🔍 Verifying tunnel connectivity..." -ForegroundColor Blue
+    Write-Host "[CHECK] Verifying tunnel connectivity..." -ForegroundColor Blue
     
     # Try to reach the health endpoint
     $maxAttempts = 3
@@ -267,18 +267,18 @@ function Test-Tunnel {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         try {
             $response = Invoke-WebRequest -Uri "https://$domainValue/health" -TimeoutSec 10 -UseBasicParsing
-            Write-Host "✅ Tunnel is working: https://$domainValue" -ForegroundColor Green
-            Write-Host "🌐 Webhook URL: https://$domainValue/print" -ForegroundColor Cyan
+            Write-Host "[OK] Tunnel is working: https://$domainValue" -ForegroundColor Green
+            Write-Host "[INFO] Webhook URL: https://$domainValue/print" -ForegroundColor Cyan
             return $true
         }
         catch {
-            Write-Host "⏳ Attempt $attempt/$maxAttempts..." -ForegroundColor Yellow
+            Write-Host "[WAIT] Attempt $attempt/$maxAttempts..." -ForegroundColor Yellow
             Start-Sleep -Seconds 5
         }
     }
     
-    Write-Host "❌ Tunnel verification failed" -ForegroundColor Red
-    Write-Host "💡 Common fixes:" -ForegroundColor Yellow
+    Write-Host "[ERROR] Tunnel verification failed" -ForegroundColor Red
+    Write-Host "   Common fixes:" -ForegroundColor Yellow
     Write-Host "  1. Check Cloudflare dashboard tunnel configuration"
     Write-Host "  2. Ensure domain points to: http://localhost:5000"
     Write-Host "  3. Verify tunnel token is correct"
@@ -287,9 +287,9 @@ function Test-Tunnel {
 }
 
 function Show-SystemInfo {
-    Write-Host "✅ System started successfully!" -ForegroundColor Green
+    Write-Host "[OK] System started successfully!" -ForegroundColor Green
     Write-Host ""
-    Write-Host "🌐 Services available at:" -ForegroundColor Cyan
+    Write-Host "[INFO] Services available at:" -ForegroundColor Cyan
     Write-Host "  • API Server:    http://localhost:5000"
     Write-Host "  • Health Check:  http://localhost:5000/health"
     Write-Host "  • CUPS Admin:    http://localhost:8631"
@@ -301,10 +301,10 @@ function Show-SystemInfo {
     # Quick health check
     try {
         $response = Invoke-WebRequest -Uri "http://localhost:5000/health" -TimeoutSec 5 -UseBasicParsing
-        Write-Host "✅ Local API is responding" -ForegroundColor Green
+        Write-Host "[OK] Local API is responding" -ForegroundColor Green
     }
     catch {
-        Write-Host "⏳ API starting up... (check logs if it doesn't respond in 30s)" -ForegroundColor Yellow
+        Write-Host "[WAIT] API starting up... (check logs if it doesn't respond in 30s)" -ForegroundColor Yellow
         return $false
     }
     
@@ -314,16 +314,16 @@ function Show-SystemInfo {
         Write-Host ""
         if ((Start-Tunnel) -and (Test-Tunnel)) {
             Write-Host ""
-            Write-Host "🎉 System fully operational!" -ForegroundColor Green
-            Write-Host "📍 Tunnel Access: https://$domainValue" -ForegroundColor Cyan
+            Write-Host "✓ System fully operational!" -ForegroundColor Green
+            Write-Host "-> Tunnel Access: https://$domainValue" -ForegroundColor Cyan
         } else {
             Write-Host ""
-            Write-Host "⚠️ Local system working, tunnel needs attention" -ForegroundColor Yellow
+            Write-Host "[WARNING] Local system working, tunnel needs attention" -ForegroundColor Yellow
         }
     }
     
     Write-Host ""
-    Write-Host "💡 Useful commands:" -ForegroundColor Yellow
+    Write-Host "   Useful commands:" -ForegroundColor Yellow
     Write-Host "  • Check status:  docker ps"
     Write-Host "  • View logs:     docker logs $ContainerName"
     Write-Host "  • Access shell:  docker exec -it $ContainerName /bin/bash"
@@ -331,8 +331,8 @@ function Show-SystemInfo {
 }
 
 function Start-InteractiveSetup {
-    Write-Host "🔧 Starting interactive setup..." -ForegroundColor Blue
-    Write-Host "💡 Accessing container control panel..." -ForegroundColor Yellow
+    Write-Host ">> Starting interactive setup..." -ForegroundColor Blue
+    Write-Host "   Accessing container control panel..." -ForegroundColor Yellow
     
     # Wait a moment for container to be ready
     Start-Sleep -Seconds 3
@@ -343,7 +343,7 @@ function Start-InteractiveSetup {
 
 function New-SampleEnvFile {
     if (-not (Test-Path $DefaultEnvFile)) {
-        Write-Host "📝 Creating sample .env file..." -ForegroundColor Blue
+        Write-Host "[CREATE] Creating sample .env file..." -ForegroundColor Blue
         
         $envContent = @"
 # Zebra Print Control System Configuration
@@ -364,7 +364,7 @@ function New-SampleEnvFile {
 "@
         
         Set-Content -Path $DefaultEnvFile -Value $envContent -Encoding UTF8
-        Write-Host "✅ Sample .env file created. Edit it with your configuration." -ForegroundColor Green
+        Write-Host "[OK] Sample .env file created. Edit it with your configuration." -ForegroundColor Green
     }
 }
 
