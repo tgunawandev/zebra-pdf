@@ -17,8 +17,11 @@ class CloudflareQuickTunnel(TunnelProvider):
     
     def __init__(self, local_port: int = 5000):
         self.local_port = local_port
-        self.pid_file = f"/tmp/cloudflared_quick_{local_port}.pid"
-        self.log_file = f"/tmp/cloudflared_quick_{local_port}.log"
+        # Use cross-platform temp directory
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        self.pid_file = os.path.join(temp_dir, f"cloudflared_quick_{local_port}.pid")
+        self.log_file = os.path.join(temp_dir, f"cloudflared_quick_{local_port}.log")
         self.db = DatabaseManager()
         self._tunnel_url: Optional[str] = None
     

@@ -17,7 +17,10 @@ class NgrokTunnel(TunnelProvider):
     def __init__(self, local_port: int = 5000, region: str = "us"):
         self.local_port = local_port
         self.region = region
-        self.pid_file = f"/tmp/ngrok_{local_port}.pid"
+        # Use cross-platform temp directory
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        self.pid_file = os.path.join(temp_dir, f"ngrok_{local_port}.pid")
         self.api_url = "http://localhost:4040/api/tunnels"
         self._tunnel_url: Optional[str] = None
     

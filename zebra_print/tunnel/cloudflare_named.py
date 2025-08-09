@@ -23,7 +23,11 @@ class CloudflareNamedTunnel(TunnelProvider):
         self.custom_domain = custom_domain  # e.g., "tln-zebra-01.abcfood.app"
         self.config_dir = os.path.expanduser("~/.cloudflared")
         self.config_file = os.path.join(self.config_dir, f"{tunnel_name}.yml")
-        self.pid_file = f"/tmp/cloudflared_{tunnel_name}.pid"
+        
+        # Use cross-platform temp directory
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        self.pid_file = os.path.join(temp_dir, f"cloudflared_{tunnel_name}.pid")
         self.db = DatabaseManager()
         self._tunnel_url: Optional[str] = None
     
@@ -299,7 +303,7 @@ class CloudflareNamedTunnel(TunnelProvider):
                 log_file = os.path.join(tempfile.gettempdir(), f'cloudflared_{self.tunnel_name}.log')
                 cwd = None
             else:
-                log_file = f'/tmp/cloudflared_{self.tunnel_name}.log'
+                log_file = os.path.join(tempfile.gettempdir(), f'cloudflared_{self.tunnel_name}.log')
                 cwd = '/'
             
             with open(log_file, 'w') as f:

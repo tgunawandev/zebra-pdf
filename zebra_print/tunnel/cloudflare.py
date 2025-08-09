@@ -18,7 +18,10 @@ class CloudflareTunnel(TunnelProvider):
         self.local_port = local_port
         self.config_dir = os.path.expanduser("~/.cloudflared")
         self.config_file = os.path.join(self.config_dir, f"{tunnel_name}.yml")
-        self.pid_file = f"/tmp/cloudflared_{tunnel_name}.pid"
+        # Use cross-platform temp directory
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        self.pid_file = os.path.join(temp_dir, f"cloudflared_{tunnel_name}.pid")
         self._tunnel_url: Optional[str] = None
     
     @property
