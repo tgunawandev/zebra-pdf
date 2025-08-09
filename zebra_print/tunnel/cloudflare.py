@@ -34,15 +34,27 @@ class CloudflareTunnel(TunnelProvider):
     def setup(self) -> Tuple[bool, str]:
         """Setup Cloudflare tunnel (Quick Tunnel mode - no auth required)."""
         try:
-            # Check if cloudflared is installed
-            result = subprocess.run(['which', 'cloudflared'], 
-                                  capture_output=True, text=True)
+            # Check if cloudflared is installed (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['where', 'cloudflared'], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                install_msg = "cloudflared not found. Download from: https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"
+            else:
+                result = subprocess.run(['which', 'cloudflared'], 
+                                      capture_output=True, text=True)
+                install_msg = "cloudflared not found. Please install: curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared.deb"
+            
             if result.returncode != 0:
-                return False, "cloudflared not found. Please install: curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared.deb"
+                return False, install_msg
             
             # Test cloudflared can run
-            test_result = subprocess.run(['cloudflared', '--version'], 
-                                       capture_output=True, text=True)
+            if platform.system() == "Windows":
+                test_result = subprocess.run(['cloudflared', '--version'], 
+                                           capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                test_result = subprocess.run(['cloudflared', '--version'], 
+                                           capture_output=True, text=True)
             if test_result.returncode != 0:
                 return False, "cloudflared installation appears to be broken"
             
@@ -146,8 +158,15 @@ class CloudflareTunnel(TunnelProvider):
             with open(self.pid_file, 'r') as f:
                 pid = int(f.read().strip())
             
-            # Kill process group
-            os.killpg(os.getpgid(pid), 15)  # SIGTERM
+            # Kill process (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                # On Windows, use taskkill to terminate the process tree
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], 
+                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                # On Linux, kill process group
+                os.killpg(os.getpgid(pid), 15)  # SIGTERM
             time.sleep(2)
             
             # Remove PID file
@@ -204,8 +223,13 @@ class CloudflareTunnel(TunnelProvider):
         """Extract tunnel URL from cloudflared logs or info."""
         try:
             # First try to get from tunnel info
-            result = subprocess.run(['cloudflared', 'tunnel', 'info', self.tunnel_name], 
-                                  capture_output=True, text=True)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['cloudflared', 'tunnel', 'info', self.tunnel_name], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                result = subprocess.run(['cloudflared', 'tunnel', 'info', self.tunnel_name], 
+                                      capture_output=True, text=True)
             
             if result.returncode == 0:
                 lines = result.stdout.split('\n')

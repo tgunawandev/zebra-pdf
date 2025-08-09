@@ -32,15 +32,27 @@ class NgrokTunnel(TunnelProvider):
     def setup(self) -> Tuple[bool, str]:
         """Setup ngrok with authentication."""
         try:
-            # Check if ngrok is installed
-            result = subprocess.run(['which', 'ngrok'], 
-                                  capture_output=True, text=True)
+            # Check if ngrok is installed (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['where', 'ngrok'], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                install_msg = "ngrok not found. Download from: https://ngrok.com/download"
+            else:
+                result = subprocess.run(['which', 'ngrok'], 
+                                      capture_output=True, text=True)
+                install_msg = "ngrok not found. Please install: curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo \"deb https://ngrok-agent.s3.amazonaws.com buster main\" | sudo tee /etc/apt/sources.list.d/ngrok.list && sudo apt update && sudo apt install ngrok"
+            
             if result.returncode != 0:
-                return False, "ngrok not found. Please install: curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo \"deb https://ngrok-agent.s3.amazonaws.com buster main\" | sudo tee /etc/apt/sources.list.d/ngrok.list && sudo apt update && sudo apt install ngrok"
+                return False, install_msg
             
             # Check if authenticated
-            config_result = subprocess.run(['ngrok', 'config', 'check'], 
-                                         capture_output=True, text=True)
+            if platform.system() == "Windows":
+                config_result = subprocess.run(['ngrok', 'config', 'check'], 
+                                             capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                config_result = subprocess.run(['ngrok', 'config', 'check'], 
+                                             capture_output=True, text=True)
             if "valid" not in config_result.stdout.lower():
                 return False, "Ngrok authentication required. Please run: ngrok config add-authtoken YOUR_TOKEN"
             
@@ -96,8 +108,15 @@ class NgrokTunnel(TunnelProvider):
             with open(self.pid_file, 'r') as f:
                 pid = int(f.read().strip())
             
-            # Kill process group
-            os.killpg(os.getpgid(pid), 15)  # SIGTERM
+            # Kill process (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                # On Windows, use taskkill to terminate the process tree
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], 
+                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                # On Linux, kill process group
+                os.killpg(os.getpgid(pid), 15)  # SIGTERM
             time.sleep(2)
             
             # Remove PID file

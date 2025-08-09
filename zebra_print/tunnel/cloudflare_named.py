@@ -56,11 +56,19 @@ class CloudflareNamedTunnel(TunnelProvider):
     def setup(self) -> Tuple[bool, str]:
         """Setup Cloudflare Named Tunnel with authentication and domain."""
         try:
-            # Check if cloudflared is installed
-            result = subprocess.run(['which', 'cloudflared'], 
-                                  capture_output=True, text=True)
+            # Check if cloudflared is installed (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['where', 'cloudflared'], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                install_msg = "cloudflared not found. Download from: https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"
+            else:
+                result = subprocess.run(['which', 'cloudflared'], 
+                                      capture_output=True, text=True)
+                install_msg = "cloudflared not found. Install: curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared.deb"
+            
             if result.returncode != 0:
-                return False, "cloudflared not found. Install: curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared.deb"
+                return False, install_msg
             
             # Check authentication
             cert_path = os.path.join(self.config_dir, "cert.pem")
@@ -76,11 +84,20 @@ class CloudflareNamedTunnel(TunnelProvider):
                     return False, "Custom domain required. Use set_custom_domain() method or configure in UI"
             
             # Create tunnel if not exists
-            tunnel_check = subprocess.run(['cloudflared', 'tunnel', 'list'], 
-                                        capture_output=True, text=True)
+            import platform
+            if platform.system() == "Windows":
+                tunnel_check = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                            capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                tunnel_check = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                            capture_output=True, text=True)
             if self.tunnel_name not in tunnel_check.stdout:
-                create_result = subprocess.run(['cloudflared', 'tunnel', 'create', self.tunnel_name], 
-                                             capture_output=True, text=True)
+                if platform.system() == "Windows":
+                    create_result = subprocess.run(['cloudflared', 'tunnel', 'create', self.tunnel_name], 
+                                                 capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                else:
+                    create_result = subprocess.run(['cloudflared', 'tunnel', 'create', self.tunnel_name], 
+                                                 capture_output=True, text=True)
                 if create_result.returncode != 0:
                     return False, f"Failed to create tunnel: {create_result.stderr}"
             
@@ -88,9 +105,14 @@ class CloudflareNamedTunnel(TunnelProvider):
             self._create_named_tunnel_config()
             
             # Create DNS record
-            dns_result = subprocess.run([
-                'cloudflared', 'tunnel', 'route', 'dns', self.tunnel_name, self.custom_domain
-            ], capture_output=True, text=True)
+            if platform.system() == "Windows":
+                dns_result = subprocess.run([
+                    'cloudflared', 'tunnel', 'route', 'dns', self.tunnel_name, self.custom_domain
+                ], capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                dns_result = subprocess.run([
+                    'cloudflared', 'tunnel', 'route', 'dns', self.tunnel_name, self.custom_domain
+                ], capture_output=True, text=True)
             
             if dns_result.returncode != 0 and "already exists" not in dns_result.stderr:
                 # Check if it's a domain ownership issue
@@ -120,8 +142,13 @@ class CloudflareNamedTunnel(TunnelProvider):
         """Auto-discover the correct credentials file for this tunnel."""
         try:
             # Method 1: Parse tunnel list to get tunnel ID
-            result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
-                                  capture_output=True, text=True)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                      capture_output=True, text=True)
             tunnel_id = None
             
             if result.returncode == 0:
@@ -145,8 +172,12 @@ class CloudflareNamedTunnel(TunnelProvider):
                         
                         # Verify this credential file belongs to our tunnel
                         tunnel_id_from_file = filename[:-5]  # Remove .json
-                        info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
-                                                   capture_output=True, text=True)
+                        if platform.system() == "Windows":
+                            info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
+                                                       capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                        else:
+                            info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
+                                                       capture_output=True, text=True)
                         
                         if info_result.returncode == 0 and self.tunnel_name in info_result.stdout:
                             return credentials_path
@@ -274,8 +305,15 @@ class CloudflareNamedTunnel(TunnelProvider):
             with open(self.pid_file, 'r') as f:
                 pid = int(f.read().strip())
             
-            # Kill process group
-            os.killpg(os.getpgid(pid), 15)  # SIGTERM
+            # Kill process (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                # On Windows, use taskkill to terminate the process tree
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], 
+                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                # On Linux, kill process group
+                os.killpg(os.getpgid(pid), 15)  # SIGTERM
             time.sleep(2)
             
             # Remove PID file
@@ -329,8 +367,18 @@ class CloudflareNamedTunnel(TunnelProvider):
                 os.kill(pid, 0)  # Check if process exists
                 
                 # Method 2: Check if cloudflared process is running
-                ps_result = subprocess.run(['pgrep', '-f', f'cloudflared.*{self.tunnel_name}'], 
-                                         capture_output=True, text=True)
+                import platform
+                if platform.system() == "Windows":
+                    ps_result = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq cloudflared.exe'], 
+                                             capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                    # Check if our tunnel name appears in the output
+                    if ps_result.returncode == 0 and self.tunnel_name in ps_result.stdout:
+                        return True
+                else:
+                    ps_result = subprocess.run(['pgrep', '-f', f'cloudflared.*{self.tunnel_name}'], 
+                                             capture_output=True, text=True)
+                    if ps_result.returncode == 0:
+                        return True
                 if ps_result.returncode == 0:
                     return True
                     
@@ -339,8 +387,13 @@ class CloudflareNamedTunnel(TunnelProvider):
         
         # Method 3: Check cloudflared tunnel list for active connections
         try:
-            result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
-                                  capture_output=True, text=True)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                result = subprocess.run(['cloudflared', 'tunnel', 'list'], 
+                                      capture_output=True, text=True)
             if result.returncode == 0:
                 for line in result.stdout.split('\n'):
                     if self.tunnel_name in line and 'CONNECTIONS' in result.stdout:

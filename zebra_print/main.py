@@ -8,7 +8,7 @@ from typing import Dict
 from zebra_print.config.settings import AppSettings
 from zebra_print.api.flask_service import FlaskAPIService
 from zebra_print.api.http_client import HTTPAPIClient
-from zebra_print.printer.zebra_cups import ZebraCUPSPrinter
+from zebra_print.printer import get_zebra_printer
 from zebra_print.tunnel.cloudflare import CloudflareTunnel
 from zebra_print.tunnel.cloudflare_named import CloudflareNamedTunnel
 from zebra_print.tunnel.cloudflare_quick import CloudflareQuickTunnel
@@ -38,7 +38,7 @@ class ZebraPrintApplication:
             timeout=self.settings.http_timeout
         )
         
-        self.printer_service = ZebraCUPSPrinter(
+        self.printer_service = get_zebra_printer(
             printer_name=self.settings.printer_name
         )
         

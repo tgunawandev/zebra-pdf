@@ -34,9 +34,14 @@ class CloudflareQuickTunnel(TunnelProvider):
         """Setup Quick Tunnel (no configuration needed)."""
         # Quick tunnels require no setup - just authentication
         try:
-            # Check if cloudflared is available
-            result = subprocess.run(['which', 'cloudflared'], 
-                                  capture_output=True, text=True)
+            # Check if cloudflared is available (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                result = subprocess.run(['where', 'cloudflared'], 
+                                      capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                result = subprocess.run(['which', 'cloudflared'], 
+                                      capture_output=True, text=True)
             if result.returncode != 0:
                 return False, "cloudflared not found"
             
@@ -116,8 +121,15 @@ class CloudflareQuickTunnel(TunnelProvider):
             with open(self.pid_file, 'r') as f:
                 pid = int(f.read().strip())
             
-            # Kill process group
-            os.killpg(os.getpgid(pid), 15)  # SIGTERM
+            # Kill process (cross-platform)
+            import platform
+            if platform.system() == "Windows":
+                # On Windows, use taskkill to terminate the process tree
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], 
+                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                # On Linux, kill process group
+                os.killpg(os.getpgid(pid), 15)  # SIGTERM
             time.sleep(2)
             
             # Remove files
