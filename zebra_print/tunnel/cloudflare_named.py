@@ -70,10 +70,23 @@ class CloudflareNamedTunnel(TunnelProvider):
             if result.returncode != 0:
                 return False, install_msg
             
-            # Check authentication
-            cert_path = os.path.join(self.config_dir, "cert.pem")
-            if not os.path.exists(cert_path):
-                return False, "Authentication required. Run: cloudflared tunnel login"
+            # Check authentication (try multiple possible locations)
+            cert_paths_to_try = [
+                os.path.join(self.config_dir, "cert.pem"),  # Standard location: ~/.cloudflared/cert.pem
+                os.path.join(os.path.expanduser("~"), "cloudflared", "cert.pem"),  # User folder: ~/cloudflared/cert.pem  
+                os.path.join(os.path.expanduser("~"), ".cloudflare", "cert.pem"),  # Alternative: ~/.cloudflare/cert.pem
+                "cert.pem"  # Current directory
+            ]
+            
+            cert_found = False
+            for cert_path in cert_paths_to_try:
+                if os.path.exists(cert_path):
+                    cert_found = True
+                    print(f"[AUTH] Found certificate at: {cert_path}")
+                    break
+            
+            if not cert_found:
+                return False, f"Authentication required. Run: cloudflared tunnel login. Searched: {cert_paths_to_try[0]}"
             
             # Get or prompt for custom domain
             if not self.custom_domain:
@@ -165,22 +178,31 @@ class CloudflareNamedTunnel(TunnelProvider):
                     return credentials_path
             
             # Method 2: Find any .json file and verify it matches our tunnel
-            if os.path.exists(self.config_dir):
-                for filename in os.listdir(self.config_dir):
-                    if filename.endswith('.json') and len(filename) == 40:  # UUID.json format
-                        credentials_path = os.path.join(self.config_dir, filename)
-                        
-                        # Verify this credential file belongs to our tunnel
-                        tunnel_id_from_file = filename[:-5]  # Remove .json
-                        if platform.system() == "Windows":
-                            info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
-                                                       capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
-                        else:
-                            info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
-                                                       capture_output=True, text=True)
-                        
-                        if info_result.returncode == 0 and self.tunnel_name in info_result.stdout:
-                            return credentials_path
+            # Try multiple config directories
+            config_dirs_to_check = [
+                self.config_dir,  # ~/.cloudflared
+                os.path.join(os.path.expanduser("~"), "cloudflared"),  # ~/cloudflared
+                os.path.join(os.path.expanduser("~"), ".cloudflare"),  # ~/.cloudflare
+                "."  # current directory
+            ]
+            
+            for config_dir in config_dirs_to_check:
+                if os.path.exists(config_dir):
+                    for filename in os.listdir(config_dir):
+                        if filename.endswith('.json') and len(filename) == 40:  # UUID.json format
+                            credentials_path = os.path.join(config_dir, filename)
+                            
+                            # Verify this credential file belongs to our tunnel
+                            tunnel_id_from_file = filename[:-5]  # Remove .json
+                            if platform.system() == "Windows":
+                                info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
+                                                           capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                            else:
+                                info_result = subprocess.run(['cloudflared', 'tunnel', 'info', tunnel_id_from_file], 
+                                                           capture_output=True, text=True)
+                            
+                            if info_result.returncode == 0 and self.tunnel_name in info_result.stdout:
+                                return credentials_path
             
             return None
             
