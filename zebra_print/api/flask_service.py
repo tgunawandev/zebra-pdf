@@ -81,22 +81,29 @@ class FlaskAPIService(APIService):
             time.sleep(wait_time)
             
             # Verify server is responding
-            if self._health_check():
+            health_result = self._health_check()
+            if health_result:
                 return True, f"API server started on {self.host}:{self.port}"
             else:
                 # Check if process is still running
                 if self.is_running():
-                    return False, "API server started but not responding to health check"
+                    # Try to get more info about why health check failed
+                    check_host = "localhost" if self.host == "0.0.0.0" else self.host
+                    return False, f"API server started but not responding to health check at {check_host}:{self.port}. Check Windows Firewall or try different port."
                 else:
                     # Process died, check stderr for error
                     try:
                         stderr_output = process.stderr.read().decode().strip() if process.stderr else ""
+                        stdout_output = process.stdout.read().decode().strip() if process.stdout else ""
+                        
                         if "Port" in stderr_output and "in use" in stderr_output:
                             return False, f"Port {self.port} is already in use by another process"
+                        elif stderr_output or stdout_output:
+                            return False, f"API server process died. Error: {stderr_output}. Output: {stdout_output[:200]}"
                         else:
-                            return False, f"API server process died: {stderr_output}"
-                    except:
-                        return False, "API server process died unexpectedly"
+                            return False, "API server process died unexpectedly (no error output)"
+                    except Exception as e:
+                        return False, f"API server process died and could not read error: {str(e)}"
                 
         except Exception as e:
             return False, f"Failed to start API server: {str(e)}"

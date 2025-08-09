@@ -124,6 +124,7 @@ class MenuController:
         print("3. [DOCUMENT] Print Sample Label (Local API)")
         print("4. [WORLD] Print Sample Label (via Tunnel)")
         print("5. [INFO] Custom Label Test")
+        print("6. [NETWORK] Network Diagnostics (Windows)")
         print("0. [BACK]  Back to Main Menu")
     
     def handle_printer_management(self):
@@ -167,6 +168,8 @@ class MenuController:
                 self._test_tunnel_print()
             elif choice == "5":
                 self._test_custom_label()
+            elif choice == "6":
+                self._run_network_diagnostics()
             else:
                 print("[ERROR] Invalid option")
             
@@ -1091,3 +1094,100 @@ class MenuController:
         except Exception as e:
             print(f"[ERROR] Could not get default token: {e}")
             return None
+    
+    def _run_network_diagnostics(self):
+        """Run network diagnostics for Windows troubleshooting."""
+        print("\n[NETWORK] NETWORK DIAGNOSTICS:")
+        print("Running Windows network connectivity tests...")
+        
+        try:
+            import socket
+            import platform
+            
+            if platform.system() != "Windows":
+                print("[INFO] This diagnostic is designed for Windows")
+                print("[INFO] On other systems, check firewall and network settings")
+                return
+            
+            # Test 1: Basic localhost connectivity
+            print("\n[TEST 1] Localhost connectivity...")
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                sock.connect(("127.0.0.1", 80))
+                sock.close()
+                print("[OK] Localhost connectivity works")
+            except Exception:
+                print("[INFO] Port 80 not available (normal)")
+            
+            # Test 2: Check if API port is available
+            print(f"\n[TEST 2] API port {self.system_status.api_service.port} availability...")
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                result = sock.connect_ex(("127.0.0.1", self.system_status.api_service.port))
+                sock.close()
+                
+                if result == 0:
+                    print(f"[OK] Something is listening on port {self.system_status.api_service.port}")
+                    
+                    # Try API health check
+                    try:
+                        import requests
+                        response = requests.get(f"http://127.0.0.1:{self.system_status.api_service.port}/health", timeout=2)
+                        if response.status_code == 200:
+                            print("[OK] API health check successful")
+                        else:
+                            print(f"[WARNING] API responded with status {response.status_code}")
+                    except requests.exceptions.Timeout:
+                        print("[ERROR] API health check timed out")
+                    except Exception as e:
+                        print(f"[ERROR] API health check failed: {e}")
+                        
+                else:
+                    print(f"[INFO] Port {self.system_status.api_service.port} is available (nothing listening)")
+                    
+            except Exception as e:
+                print(f"[ERROR] Port test failed: {e}")
+            
+            # Test 3: Windows Firewall check
+            print(f"\n[TEST 3] Windows Firewall status...")
+            try:
+                import subprocess
+                result = subprocess.run([
+                    "netsh", "advfirewall", "show", "allprofiles", "state"
+                ], capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                if result.returncode == 0:
+                    if "ON" in result.stdout.upper():
+                        print("[WARNING] Windows Firewall is ENABLED")
+                        print("[INFO] This might block localhost connections")
+                        print("[INFO] Try temporarily disabling firewall for testing")
+                    else:
+                        print("[OK] Windows Firewall appears to be disabled")
+                else:
+                    print("[INFO] Could not check firewall status")
+            except Exception as e:
+                print(f"[ERROR] Firewall check failed: {e}")
+            
+            # Test 4: Process check
+            print(f"\n[TEST 4] API process status...")
+            api_status = self.system_status.api_service.get_status()
+            if api_status['running']:
+                print(f"[OK] API process is running (PID: {api_status.get('pid', 'unknown')})")
+            else:
+                print("[WARNING] API process is not running")
+                print("[INFO] Start the API server first (option 2 from main menu)")
+            
+            # Recommendations
+            print(f"\n[RECOMMENDATIONS]")
+            print("If API connection still fails:")
+            print("1. Try running as Administrator")
+            print("2. Temporarily disable Windows Firewall")
+            print("3. Check Windows Defender/Antivirus settings")
+            print("4. Try a different port (modify settings)")
+            print("5. Check if another process is using the port")
+            print("6. Restart the application")
+            
+        except Exception as e:
+            print(f"[ERROR] Diagnostics failed: {e}")
