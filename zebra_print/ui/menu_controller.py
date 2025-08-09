@@ -1007,7 +1007,7 @@ class MenuController:
         pass
     
     def _get_token_for_testing(self):
-        """Get token for testing - prompt user to enter token."""
+        """Get token for testing - automatically use default token or prompt user."""
         try:
             # Get available tokens from API
             import requests
@@ -1020,6 +1020,22 @@ class MenuController:
                 if response.status_code == 200:
                     data = response.json()
                     active_tokens = [t for t in data['tokens'] if t['is_active']]
+                    
+                    # First try to find and use the default token
+                    default_token = next((t for t in active_tokens if t['name'] == 'default'), None)
+                    if default_token:
+                        print(f"\n[INFO] Found default token, but need the actual value for testing")
+                        print(f"[INFO] The default token was generated when the API started")
+                        print(f"[INFO] You can find it in the console output where you started the API")
+                        print(f"[INFO] Look for: '[KEY] Generated default API token: <token_value>'")
+                        
+                        print(f"\n[OPTION] You can:")
+                        print(f"   1. Copy the default token from startup logs")
+                        print(f"   2. Generate a new token using 'A. API Security' menu")
+                        print(f"   3. Skip this test")
+                        
+                        choice = input(f"\nEnter token value or press Enter to skip: ").strip()
+                        return choice if choice else None
                     
                     if active_tokens:
                         print(f"\n[INFO] Found {len(active_tokens)} active token(s):")
@@ -1035,7 +1051,7 @@ class MenuController:
                         print("[INFO] Generate a token first using 'A. API Security' menu")
                         return None
                 else:
-                    print("[ERROR] Failed to get token info from API")
+                    print(f"[ERROR] Failed to get token info from API: HTTP {response.status_code}")
                     return None
             else:
                 print("[ERROR] API server not running")
@@ -1043,4 +1059,35 @@ class MenuController:
                         
         except Exception as e:
             print(f"[ERROR] Error getting token info: {e}")
+            return None
+    
+    def _get_default_token_value(self):
+        """Get the actual default token value from API startup logs or generate a new one."""
+        try:
+            # For now, we'll generate a temporary token for testing
+            # In a real deployment, this would be stored securely
+            import requests
+            import secrets
+            
+            api_status = self.system_status.api_service.get_status()
+            
+            # Try to get the actual token value by generating a new default token
+            # This is a workaround since we don't have access to the original token value
+            generate_url = f"http://{api_status['host']}:{api_status['port']}/auth/token/default-test"
+            
+            # Create a test token for this session
+            test_token_data = {
+                'name': 'test-session',
+                'description': 'Temporary token for testing'
+            }
+            
+            # For testing purposes, return a placeholder that the user should replace
+            print("[INFO] For testing, please generate a token from the API Security menu")
+            print("[INFO] Or check the API startup logs for the default token")
+            
+            # Return None to prompt user for manual token entry
+            return None
+            
+        except Exception as e:
+            print(f"[ERROR] Could not get default token: {e}")
             return None

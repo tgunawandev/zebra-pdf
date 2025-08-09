@@ -155,13 +155,16 @@ class FlaskAPIService(APIService):
     
     def get_status(self) -> Dict[str, any]:
         """Get API service status."""
+        # Use localhost for client connections when server binds to 0.0.0.0
+        client_host = "localhost" if self.host == "0.0.0.0" else self.host
+        
         status = {
             'running': self.is_running(),
-            'host': self.host,
+            'host': client_host,
             'port': self.port,
             'pid': None,
             'health': False,
-            'url': f"http://{self.host}:{self.port}"
+            'url': f"http://{client_host}:{self.port}"
         }
         
         if os.path.exists(self.pid_file):
