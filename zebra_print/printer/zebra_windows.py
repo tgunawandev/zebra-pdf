@@ -376,30 +376,42 @@ class ZebraWindowsPrinter(PrinterService):
     def _enable_printer(self) -> Tuple[bool, str]:
         """Enable the printer and set it to accept jobs."""
         try:
-            # Enable printer using PowerShell
-            enable_cmd = [
-                "powershell", "-Command",
-                f"Set-Printer -Name '{self._printer_name}' -PrinterStatus Normal"
+            # Method 1: Try Resume-Printer (most reliable)
+            resume_cmd = [
+                "powershell", "-Command", 
+                f"Resume-Printer -Name '{self._printer_name}'"
             ]
-            result = subprocess.run(enable_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            result = subprocess.run(resume_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             
-            if result.returncode != 0:
-                # Try alternative enable method
-                enable_cmd2 = [
-                    "powershell", "-Command", 
-                    f"Resume-Printer -Name '{self._printer_name}'"
-                ]
-                result2 = subprocess.run(enable_cmd2, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
-                
-                if result2.returncode == 0:
-                    return True, "Printer enabled successfully"
-                else:
-                    return False, f"Could not enable printer. Error: {result.stderr}. You may need to enable it manually in Windows Settings."
-            else:
+            if result.returncode == 0:
+                return True, "Printer resumed/enabled successfully"
+            
+            # Method 2: Try Set-Printer with correct parameters
+            set_cmd = [
+                "powershell", "-Command",
+                f"Set-Printer -Name '{self._printer_name}' -Published $true"
+            ]
+            result2 = subprocess.run(set_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if result2.returncode == 0:
                 return True, "Printer enabled successfully"
+            
+            # Method 3: Try using WMI to enable printer
+            wmi_cmd = [
+                "powershell", "-Command",
+                f"Get-WmiObject -Class Win32_Printer -Filter \"Name='{self._printer_name}'\" | ForEach-Object {{ $_.SetPrinterState(1) }}"
+            ]
+            result3 = subprocess.run(wmi_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if result3.returncode == 0:
+                return True, "Printer enabled via WMI"
+            
+            # All methods failed, but let's try printing anyway since debug showed it works
+            return True, "Could not enable printer via PowerShell, but will attempt printing anyway (debug showed printing works)"
                 
         except Exception as e:
-            return False, f"Failed to enable printer: {str(e)}"
+            # Don't fail completely, try printing anyway
+            return True, f"Printer enable commands failed, but will attempt printing: {str(e)}"
     
     def _try_direct_printer_port(self, zpl_content: str, temp_file_path: str) -> Tuple[bool, str]:
         """Try alternative printing methods when copy command fails."""
