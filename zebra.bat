@@ -59,8 +59,8 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-if not exist "%SCRIPT_DIR%zebra_control_v2.py" (
-    echo ERROR: zebra_control_v2.py not found in current directory
+if not exist "%SCRIPT_DIR%zebra_print_control.py" (
+    echo ERROR: zebra_print_control.py not found in current directory
     echo Please ensure all Python files are present
     exit /b 1
 )
@@ -84,7 +84,7 @@ if %errorlevel% equ 0 (
 )
 
 echo Starting Python application...
-start "Zebra Print Control" python zebra_control_v2.py
+start "Zebra Print Control" python zebra_print_control.py
 
 timeout /t 3 >nul
 
@@ -96,7 +96,7 @@ if %errorlevel% equ 0 (
     echo Services available at:
     echo   * API Server:    http://localhost:5000
     echo   * Health Check:  http://localhost:5000/health
-    echo   * CUPS Admin:    http://localhost:8631
+    echo   * Control Panel: Run 'zebra shell' command
 ) else (
     echo INFO: System starting... API may take a moment to be ready
 )
@@ -173,29 +173,45 @@ if exist "%SCRIPT_DIR%logs" (
 goto :eof
 
 :show_logs
-echo %BLUE%📋 Container Logs:%NC%
-docker compose logs -f --tail=50
+echo System Logs:
+echo.
+if exist "%SCRIPT_DIR%logs" (
+    echo Recent log files:
+    dir "%SCRIPT_DIR%logs\*.log" /b 2>nul
+    echo.
+    echo To view logs: type "%SCRIPT_DIR%logs\[filename]"
+) else (
+    echo No log directory found. Logs may be in system temp or console output.
+)
 goto :eof
 
 :access_shell
-echo %BLUE%🐚 Accessing container shell...%NC%
-echo %YELLOW%💡 Tip: Run 'python3 zebra_control_v2.py' for the control panel%NC%
+echo Interactive Control Panel
 echo.
-docker exec -it %CONTAINER_NAME% /bin/bash
+echo Starting Python control panel...
+call :check_requirements
+if %errorlevel% neq 0 exit /b 1
+
+python zebra_print_control.py
 goto :eof
 
 :interactive_setup
-echo %BLUE%🔧 Interactive Setup Wizard%NC%
+echo Interactive Setup Wizard
 echo.
 
-docker ps --filter name=%CONTAINER_NAME% --format "{{.Names}}" | findstr %CONTAINER_NAME% >nul
+call :check_requirements
+if %errorlevel% neq 0 exit /b 1
+
+rem Check if system is running
+tasklist /fi "windowtitle eq Zebra*" 2>nul | find /i "python" >nul
 if %errorlevel% neq 0 (
-    echo %RED%❌ Container not running. Start it first with: %~nx0 start%NC%
-    exit /b 1
+    echo WARNING: Zebra system not running. Starting it first...
+    call :start_system
+    timeout /t 3 >nul
 )
 
-echo %CYAN%Starting setup wizard...%NC%
-docker exec -it %CONTAINER_NAME% python3 zebra_control_v2.py
+echo Starting setup wizard...
+python zebra_print_control.py
 goto :eof
 
 :configure_domain
