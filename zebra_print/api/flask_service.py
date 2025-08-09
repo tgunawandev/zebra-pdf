@@ -75,8 +75,10 @@ class FlaskAPIService(APIService):
             with open(self.pid_file, 'w') as f:
                 f.write(str(process.pid))
             
-            # Wait for server to start
-            time.sleep(2)
+            # Wait for server to start (increased timeout for Windows)
+            import platform
+            wait_time = 5 if platform.system() == "Windows" else 3
+            time.sleep(wait_time)
             
             # Verify server is responding
             if self._health_check():
@@ -182,7 +184,25 @@ class FlaskAPIService(APIService):
     def _health_check(self) -> bool:
         """Perform internal health check."""
         try:
-            response = requests.get(f"http://{self.host}:{self.port}/health", timeout=3)
-            return response.status_code == 200
-        except:
+            # Use localhost for health check when server binds to 0.0.0.0
+            check_host = "localhost" if self.host == "0.0.0.0" else self.host
+            health_url = f"http://{check_host}:{self.port}/health"
+            
+            # Try multiple times with increasing delays
+            for attempt in range(3):
+                try:
+                    response = requests.get(health_url, timeout=5)
+                    if response.status_code == 200:
+                        return True
+                except requests.exceptions.ConnectionError:
+                    if attempt < 2:  # Not the last attempt
+                        time.sleep(1)
+                        continue
+                except requests.exceptions.Timeout:
+                    if attempt < 2:  # Not the last attempt
+                        time.sleep(1)
+                        continue
+                    
+            return False
+        except Exception as e:
             return False
