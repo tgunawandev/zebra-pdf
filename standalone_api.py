@@ -161,7 +161,7 @@ auth_middleware = AuthMiddleware(token_manager)
 
 def json_to_zpl(label_data):
     """Convert JSON label data to ZPL commands."""
-    logging.info(f"🔄 Converting {len(label_data['labels'])} labels to ZPL")
+    logging.info(f"[PROCESS] Converting {len(label_data['labels'])} labels to ZPL")
     
     zpl_commands = []
     
@@ -192,7 +192,7 @@ def print_to_zebra(zpl_commands, printer_name=None):
     target_printer = printer_name or PRINTER_NAME
     
     try:
-        logging.info(f"🖨️ Sending ZPL to {target_printer}")
+        logging.info(f"[PRINTER]️ Sending ZPL to {target_printer}")
         
         process = subprocess.Popen(
             ['lp', '-d', target_printer, '-o', 'raw'],
@@ -205,15 +205,15 @@ def print_to_zebra(zpl_commands, printer_name=None):
         
         if process.returncode == 0:
             job_info = stdout.decode().strip()
-            logging.info(f"✅ ZPL printed successfully: {job_info}")
+            logging.info(f"[OK] ZPL printed successfully: {job_info}")
             return True, job_info
         else:
             error_msg = stderr.decode()
-            logging.error(f"❌ ZPL printing failed: {error_msg}")
+            logging.error(f"[ERROR] ZPL printing failed: {error_msg}")
             return False, error_msg
             
     except Exception as e:
-        logging.error(f"❌ ZPL printing error: {e}")
+        logging.error(f"[ERROR] ZPL printing error: {e}")
         return False, str(e)
 
 @app.route('/health', methods=['GET'])
@@ -247,7 +247,7 @@ def print_labels():
                 if field not in label:
                     return jsonify({"error": f"Label {i}: missing '{field}' field"}), 400
         
-        logging.info(f"📨 Received print request for {len(data['labels'])} labels")
+        logging.info(f"[POST] Received print request for {len(data['labels'])} labels")
         
         # Convert to ZPL
         zpl = json_to_zpl(data)
@@ -272,7 +272,7 @@ def print_labels():
             }), 500
             
     except Exception as e:
-        logging.error(f"❌ Print request error: {e}")
+        logging.error(f"[ERROR] Print request error: {e}")
         return jsonify({
             "success": False,
             "error": "Internal server error",
@@ -370,12 +370,12 @@ def list_printers():
         }), 500
 
 if __name__ == '__main__':
-    logging.info("🚀 Starting Standalone Label Printing API Server")
+    logging.info("[START] Starting Standalone Label Printing API Server")
     
     # Ensure default token exists
     tokens = token_manager.get_all_tokens()
     if not tokens:
         default_token = token_manager.generate_token("default", "Default API access token")
-        logging.info(f"🔑 Generated default API token: {default_token}")
+        logging.info(f"[TOKEN] Generated default API token: {default_token}")
     
     app.run(host='0.0.0.0', port=5001, debug=False)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🏷️ Zebra Label Printing Control Panel
+Zebra Label Printing Control Panel
 Complete solution for Odoo to local Zebra printer integration.
 """
 
@@ -199,9 +199,9 @@ class ZebraLabelControl:
     
     def setup_cloudflare_tunnel(self):
         """Setup Cloudflare tunnel with permanent URL."""
-        print("🔥 Setting up Cloudflare Tunnel...")
-        print("📱 A browser will open for one-time authentication")
-        input("⏎ Press Enter when ready...")
+        print("[CLOUDFLARE] Setting up Cloudflare Tunnel...")
+        print("[BROWSER] A browser will open for one-time authentication")
+        input("[ENTER] Press Enter when ready...")
         
         # Check if cloudflared exists
         success, _, _ = self.run_command('which cloudflared')
@@ -209,14 +209,14 @@ class ZebraLabelControl:
             return False, "Cloudflared not installed. Visit: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/"
         
         # Login to Cloudflare
-        print("🔐 Authenticating with Cloudflare...")
+        print("[AUTH] Authenticating with Cloudflare...")
         success, _, stderr = self.run_command('cloudflared tunnel login', timeout=120)
         if not success:
             return False, f"Authentication failed: {stderr}"
         
         # Create tunnel
         tunnel_name = "zebra-printer"
-        print(f"🔧 Creating tunnel: {tunnel_name}")
+        print(f"[CONFIG] Creating tunnel: {tunnel_name}")
         success, stdout, stderr = self.run_command(f'cloudflared tunnel create {tunnel_name}', timeout=30)
         
         if not success:
@@ -367,33 +367,33 @@ ingress:
     
     def test_complete_system(self):
         """Test the complete system end-to-end."""
-        print("🧪 TESTING COMPLETE SYSTEM")
+        print("[TEST] TESTING COMPLETE SYSTEM")
         print("=" * 35)
         
         # Test API Server
-        print("1. 🖥️  Testing API server...")
+        print("1. [API]  Testing API server...")
         if not self.check_api_server():
-            print("❌ API server not running")
+            print("[ERROR] API server not running")
             return False
-        print("✅ API server OK")
+        print("[OK] API server OK")
         
         # Test Printer
-        print("2. 🖨️  Testing printer...")
+        print("2. [PRINTER]  Testing printer...")
         if not self.check_printer():
-            print("❌ Printer not ready")
+            print("[ERROR] Printer not ready")
             return False
-        print("✅ Printer OK")
+        print("[OK] Printer OK")
         
         # Test Tunnel
-        print("3. 🌐 Testing tunnel...")
+        print("3. [TUNNEL] Testing tunnel...")
         tunnel_info = self.get_tunnel_info()
         if not tunnel_info:
-            print("❌ Tunnel not active")
+            print("[ERROR] Tunnel not active")
             return False
-        print(f"✅ Tunnel OK ({tunnel_info['type']})")
+        print(f"[OK] Tunnel OK ({tunnel_info['type']})")
         
         # End-to-end test
-        print("4. 🏷️  Testing end-to-end printing...")
+        print("4. [LABEL]  Testing end-to-end printing...")
         test_data = {
             "labels": [{
                 "title": "W-CPN/OUT/TEST",
@@ -416,41 +416,41 @@ ingress:
             
             if response.ok:
                 result = response.json()
-                print("✅ Print test successful!")
+                print("[OK] Print test successful!")
                 print(f"   Job: {result.get('job_info', 'N/A')}")
-                print("\n🏷️  Check your printer!")
+                print("\n[LABEL]  Check your printer!")
                 return True
             else:
-                print(f"❌ Print test failed: {response.status_code}")
+                print(f"[ERROR] Print test failed: {response.status_code}")
                 return False
         except Exception as e:
-            print(f"❌ Print test error: {e}")
+            print(f"[ERROR] Print test error: {e}")
             return False
     
     def test_print_labels(self):
         """Interactive label print testing."""
-        print("\n🏷️  LABEL PRINT TESTING")
+        print("\n[LABEL]  LABEL PRINT TESTING")
         print("=" * 30)
         
         # Check prerequisites
         if not self.check_api_server():
-            print("❌ API server not running")
+            print("[ERROR] API server not running")
             choice = input("Start API server? (Y/n): ").lower()
             if choice != 'n':
                 success, message = self.start_api_server()
                 if not success:
-                    print(f"❌ {message}")
+                    print(f"[ERROR] {message}")
                     return
-                print(f"✅ {message}")
+                print(f"[OK] {message}")
             else:
                 return
         
         # Show test options
-        print("📋 Test Options:")
-        print("1. 🚀 Quick Test (Sample Data)")
-        print("2. ✏️  Custom Test (Your Data)")
-        print("3. 🌐 Test via Tunnel")
-        print("0. ⬅️  Back")
+        print("[INFO] Test Options:")
+        print("1. [START] Quick Test (Sample Data)")
+        print("2. [EDIT]  Custom Test (Your Data)")
+        print("3. [TUNNEL] Test via Tunnel")
+        print("0. [BACK]  Back")
         
         choice = input("\nChoose test type (0-3): ").strip()
         
@@ -461,11 +461,11 @@ ingress:
         elif choice == '3':
             self._tunnel_print_test()
         elif choice != '0':
-            print("❌ Invalid choice")
+            print("[ERROR] Invalid choice")
     
     def _quick_print_test(self):
         """Quick print test with sample data."""
-        print("\n🚀 QUICK PRINT TEST")
+        print("\n[START] QUICK PRINT TEST")
         print("-" * 20)
         
         test_data = {
@@ -476,30 +476,30 @@ ingress:
             }]
         }
         
-        print("📄 Sample label data:")
+        print("[DOCUMENT] Sample label data:")
         print(f"   Title: {test_data['labels'][0]['title']}")
         print(f"   Date: {test_data['labels'][0]['date']}")
         print(f"   QR Code: {test_data['labels'][0]['qr_code']}")
         
-        confirm = input("\n🖨️  Print this test label? (Y/n): ").lower()
+        confirm = input("\n[PRINTER]  Print this test label? (Y/n): ").lower()
         if confirm != 'n':
             self._send_print_request(f"http://localhost:{self.api_port}/print", test_data)
     
     def _custom_print_test(self):
         """Custom print test with user input."""
-        print("\n✏️  CUSTOM PRINT TEST")
+        print("\n[EDIT]  CUSTOM PRINT TEST")
         print("-" * 20)
         
         print("Enter label information:")
-        title = input("📝 Title (default: W-CPN/OUT/CUSTOM): ").strip()
+        title = input("[INPUT] Title (default: W-CPN/OUT/CUSTOM): ").strip()
         if not title:
             title = "W-CPN/OUT/CUSTOM"
         
-        date = input("📅 Date (default: today): ").strip()
+        date = input("[DATE] Date (default: today): ").strip()
         if not date:
             date = datetime.now().strftime("%d/%m/%y")
         
-        qr_code = input("🔲 QR Code (default: CUSTOM123): ").strip()
+        qr_code = input("[QR] QR Code (default: CUSTOM123): ").strip()
         if not qr_code:
             qr_code = "CUSTOM123"
         
@@ -511,29 +511,29 @@ ingress:
             }]
         }
         
-        print(f"\n📄 Your label:")
+        print(f"\n[DOCUMENT] Your label:")
         print(f"   Title: {title}")
         print(f"   Date: {date}")
         print(f"   QR Code: {qr_code}")
         
-        confirm = input("\n🖨️  Print this label? (Y/n): ").lower()
+        confirm = input("\n[PRINTER]  Print this label? (Y/n): ").lower()
         if confirm != 'n':
             self._send_print_request(f"http://localhost:{self.api_port}/print", test_data)
     
     def _tunnel_print_test(self):
         """Test printing via tunnel (as Odoo would)."""
-        print("\n🌐 TUNNEL PRINT TEST")
+        print("\n[TUNNEL] TUNNEL PRINT TEST")
         print("-" * 20)
         
         tunnel_info = self.get_tunnel_info()
         if not tunnel_info:
-            print("❌ No active tunnel found")
+            print("[ERROR] No active tunnel found")
             choice = input("Set up tunnel first? (Y/n): ").lower()
             if choice != 'n':
                 self.manage_tunnel()
             return
         
-        print(f"🌐 Testing via: {tunnel_info['url']}")
+        print(f"[TUNNEL] Testing via: {tunnel_info['url']}")
         
         test_data = {
             "labels": [{
@@ -543,12 +543,12 @@ ingress:
             }]
         }
         
-        print("📄 Test data:")
+        print("[DOCUMENT] Test data:")
         print(f"   Title: {test_data['labels'][0]['title']}")
         print(f"   Date: {test_data['labels'][0]['date']}")
         print(f"   QR Code: {test_data['labels'][0]['qr_code']}")
         
-        confirm = input(f"\n🖨️  Print via {tunnel_info['type']} tunnel? (Y/n): ").lower()
+        confirm = input(f"\n[PRINTER]  Print via {tunnel_info['type']} tunnel? (Y/n): ").lower()
         if confirm != 'n':
             headers = {'Content-Type': 'application/json'}
             if tunnel_info['type'] == 'ngrok':
@@ -562,139 +562,139 @@ ingress:
             headers = {'Content-Type': 'application/json'}
         
         try:
-            print(f"📤 Sending request to: {url}")
+            print(f"[SEND] Sending request to: {url}")
             response = requests.post(url, json=data, headers=headers, timeout=30)
             
             if response.ok:
                 result = response.json()
-                print("✅ Print request successful!")
-                print(f"   📊 Labels sent: {result.get('labels_count', 0)}")
-                print(f"   🆔 Job ID: {result.get('job_info', 'N/A')}")
-                print(f"   ⏰ Timestamp: {result.get('timestamp', 'N/A')}")
-                print("\n🏷️  Check your printer - label should be printing!")
+                print("[OK] Print request successful!")
+                print(f"   [STATUS] Labels sent: {result.get('labels_count', 0)}")
+                print(f"   [ID] Job ID: {result.get('job_info', 'N/A')}")
+                print(f"   [TIME] Timestamp: {result.get('timestamp', 'N/A')}")
+                print("\n[LABEL]  Check your printer - label should be printing!")
             else:
-                print(f"❌ Print request failed!")
+                print(f"[ERROR] Print request failed!")
                 print(f"   HTTP Status: {response.status_code}")
                 print(f"   Error: {response.text}")
         except requests.exceptions.Timeout:
-            print("❌ Request timed out - check printer connection")
+            print("[ERROR] Request timed out - check printer connection")
         except Exception as e:
-            print(f"❌ Request error: {e}")
+            print(f"[ERROR] Request error: {e}")
     
     # =================== USER INTERFACE ===================
     
     def print_header(self):
         """Print application header."""
-        print("🏷️  " + "=" * 50)
+        print("[LABEL]  " + "=" * 50)
         print("    ZEBRA LABEL PRINTING CONTROL PANEL")
-        print("    Odoo → Permanent URL → Local Printer")
+        print("    Odoo -> Permanent URL -> Local Printer")
         print("=" * 54)
     
     def print_status(self):
         """Print current system status."""
-        print("\n📊 SYSTEM STATUS:")
+        print("\n[STATUS] SYSTEM STATUS:")
         print("-" * 20)
         
         # API Server
         api_running = self.check_api_server()
-        print(f"🖥️  API Server:  {'✅ RUNNING' if api_running else '❌ STOPPED'}")
+        print(f"[API]  API Server:  {'[OK] RUNNING' if api_running else '[ERROR] STOPPED'}")
         if api_running:
             print(f"    Local URL: http://localhost:{self.api_port}")
         
         # Printer
         printer_ready = self.check_printer()
-        print(f"🖨️  Printer:    {'✅ READY' if printer_ready else '❌ NOT READY'}")
+        print(f"[PRINTER]  Printer:    {'[OK] READY' if printer_ready else '[ERROR] NOT READY'}")
         
         # Tunnel
         tunnel_info = self.get_tunnel_info()
         if tunnel_info:
             status = "PERMANENT" if tunnel_info['permanent'] else "TEMPORARY"
-            print(f"🌐 Tunnel:     ✅ ACTIVE ({tunnel_info['type'].upper()}) - {status}")
+            print(f"[TUNNEL] Tunnel:     [OK] ACTIVE ({tunnel_info['type'].upper()}) - {status}")
             print(f"    Public URL: {tunnel_info['url']}")
         else:
-            print("🌐 Tunnel:     ❌ INACTIVE")
+            print("[TUNNEL] Tunnel:     [ERROR] INACTIVE")
         
         # Overall Status
         if api_running and printer_ready and tunnel_info:
-            print(f"\n🎯 ODOO INTEGRATION: ✅ READY")
+            print(f"\n[TARGET] ODOO INTEGRATION: [OK] READY")
             if tunnel_info:
                 print(f"    Webhook URL: {tunnel_info['url']}/print")
         else:
-            print(f"\n🎯 ODOO INTEGRATION: ❌ NOT READY")
+            print(f"\n[TARGET] ODOO INTEGRATION: [ERROR] NOT READY")
     
     def quick_start(self):
         """Quick start wizard for new users."""
-        print("\n🚀 QUICK START WIZARD")
+        print("\n[START] QUICK START WIZARD")
         print("=" * 25)
         
         # Step 1: API Server
         print("Step 1: Starting API server...")
         success, message = self.start_api_server()
         if not success:
-            print(f"❌ {message}")
+            print(f"[ERROR] {message}")
             return
-        print(f"✅ {message}")
+        print(f"[OK] {message}")
         
         # Step 2: Tunnel Setup
         print("\nStep 2: Setting up tunnel...")
         tunnel_info = self.get_tunnel_info()
         
         if not tunnel_info:
-            print("🌐 Choose tunnel type:")
-            print("1. 🔥 Cloudflare (PERMANENT URL - Recommended)")
-            print("2. 🟡 Ngrok (Temporary URL)")
+            print("[TUNNEL] Choose tunnel type:")
+            print("1. [CLOUDFLARE] Cloudflare (PERMANENT URL - Recommended)")
+            print("2. [NGROK] Ngrok (Temporary URL)")
             
             choice = input("Choose (1-2): ").strip()
             
             if choice == '1':
                 success, message = self.setup_cloudflare_tunnel()
                 if not success:
-                    print(f"❌ {message}")
+                    print(f"[ERROR] {message}")
                     return
-                print(f"✅ {message}")
+                print(f"[OK] {message}")
             
             # Start tunnel
             success, message = self.start_tunnel()
             if not success:
-                print(f"❌ {message}")
+                print(f"[ERROR] {message}")
                 return
-            print(f"✅ {message}")
+            print(f"[OK] {message}")
         else:
-            print(f"✅ Using existing {tunnel_info['type']} tunnel")
+            print(f"[OK] Using existing {tunnel_info['type']} tunnel")
             # Ensure it's running
             success, message = self.start_tunnel()
             if success:
-                print(f"✅ {message}")
+                print(f"[OK] {message}")
         
         # Step 3: Test
         print("\nStep 3: Testing system...")
         if self.test_complete_system():
-            print("\n🎉 QUICK START COMPLETE!")
+            print("\n[SUCCESS] QUICK START COMPLETE!")
             print("Your system is ready for Odoo integration!")
         else:
-            print("\n❌ System test failed")
+            print("\n[ERROR] System test failed")
     
     def show_odoo_config(self):
         """Show Odoo configuration."""
         tunnel_info = self.get_tunnel_info()
         if not tunnel_info:
-            print("❌ No active tunnel. Set up tunnel first.")
+            print("[ERROR] No active tunnel. Set up tunnel first.")
             return
         
-        print("\n📋 ODOO WEBHOOK CONFIGURATION")
+        print("\n[INFO] ODOO WEBHOOK CONFIGURATION")
         print("=" * 35)
-        print(f"🌐 Webhook URL: {tunnel_info['url']}/print")
-        print("📨 Method: POST")
-        print("📄 Content-Type: application/json")
+        print(f"[TUNNEL] Webhook URL: {tunnel_info['url']}/print")
+        print("[POST] Method: POST")
+        print("[DOCUMENT] Content-Type: application/json")
         print()
-        print("📝 JSON Format:")
+        print("[INPUT] JSON Format:")
         print('{\n  "labels": [{\n    "title": "W-CPN/OUT/00001",')
         print('    "date": "08/08/25",\n    "qr_code": "01010101160"\n  }]\n}')
         
         if tunnel_info['permanent']:
-            print("\n✅ This URL is PERMANENT - configure once!")
+            print("\n[OK] This URL is PERMANENT - configure once!")
         else:
-            print("\n⚠️  This URL changes on restart - update Odoo each time")
+            print("\n[WARNING]  This URL changes on restart - update Odoo each time")
     
     def main_menu(self):
         """Display main menu and handle user input."""
@@ -703,19 +703,19 @@ ingress:
             self.print_header()
             self.print_status()
             
-            print("\n🎯 ACTIONS:")
-            print("1. 🚀 Quick Start (New Users)")
-            print("2. 🖥️  Start/Stop API Server")
-            print("3. 🌐 Setup/Manage Tunnel")
-            print("4. 🧪 Test Complete System")
-            print("5. 🏷️  Test Print Labels")
-            print("6. 📋 Show Odoo Configuration")
-            print("0. ❌ Exit")
+            print("\n[TARGET] ACTIONS:")
+            print("1. [START] Quick Start (New Users)")
+            print("2. [API]  Start/Stop API Server")
+            print("3. [TUNNEL] Setup/Manage Tunnel")
+            print("4. [TEST] Test Complete System")
+            print("5. [LABEL]  Test Print Labels")
+            print("6. [INFO] Show Odoo Configuration")
+            print("0. [ERROR] Exit")
             
-            choice = input(f"\n👉 Choose (0-6): ").strip()
+            choice = input(f"\n>> Choose (0-6): ").strip()
             
             if choice == '0':
-                print("\n👋 Goodbye!")
+                print("\n[BYE] Goodbye!")
                 break
             elif choice == '1':
                 self.quick_start()
@@ -730,54 +730,54 @@ ingress:
             elif choice == '6':
                 self.show_odoo_config()
             else:
-                print("❌ Invalid choice")
+                print("[ERROR] Invalid choice")
             
             if choice != '0':
-                input("\n⏎ Press Enter to continue...")
+                input("\n[ENTER] Press Enter to continue...")
     
     def manage_api_server(self):
         """Manage API server."""
-        print("\n🖥️  API SERVER MANAGEMENT")
+        print("\n[API]  API SERVER MANAGEMENT")
         if self.check_api_server():
-            print("Status: ✅ RUNNING")
+            print("Status: [OK] RUNNING")
             action = input("Stop server? (y/N): ").lower()
             if action == 'y':
                 success, message = self.stop_api_server()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
         else:
-            print("Status: ❌ STOPPED")
+            print("Status: [ERROR] STOPPED")
             action = input("Start server? (Y/n): ").lower()
             if action != 'n':
                 success, message = self.start_api_server()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
     
     def manage_tunnel(self):
         """Manage tunnel."""
-        print("\n🌐 TUNNEL MANAGEMENT")
+        print("\n[TUNNEL] TUNNEL MANAGEMENT")
         tunnel_info = self.get_tunnel_info()
         
         if tunnel_info:
-            print(f"Status: ✅ ACTIVE ({tunnel_info['type']})")
+            print(f"Status: [OK] ACTIVE ({tunnel_info['type']})")
             print(f"URL: {tunnel_info['url']}")
             action = input("Stop tunnel? (y/N): ").lower()
             if action == 'y':
                 success, message = self.stop_tunnel()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
         else:
-            print("Status: ❌ INACTIVE")
-            print("1. 🔥 Setup Cloudflare (Permanent)")
-            print("2. 🟡 Start Ngrok (Temporary)")
+            print("Status: [ERROR] INACTIVE")
+            print("1. [CLOUDFLARE] Setup Cloudflare (Permanent)")
+            print("2. [NGROK] Start Ngrok (Temporary)")
             choice = input("Choose (1-2): ").strip()
             
             if choice == '1':
                 success, message = self.setup_cloudflare_tunnel()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
                 if success:
                     success, message = self.start_tunnel()
-                    print(f"{'✅' if success else '❌'} {message}")
+                    print(f"{'[OK]' if success else '[ERROR]'} {message}")
             elif choice == '2':
                 success, message = self.start_ngrok_tunnel()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
 
 def main():
     """Main application entry point."""

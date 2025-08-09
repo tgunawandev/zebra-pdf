@@ -19,7 +19,7 @@ def pdf_to_zpl(pdf_path: str) -> str:
     
     For QR label PDFs, this extracts the text and recreates ZPL commands.
     """
-    print("🔄 Converting PDF to ZPL commands...")
+    print("[PROCESS] Converting PDF to ZPL commands...")
     
     try:
         # Method 1: Try to extract text from PDF and recreate as ZPL
@@ -33,7 +33,7 @@ def pdf_to_zpl(pdf_path: str) -> str:
         return convert_pdf_image_to_zpl(pdf_path)
         
     except Exception as e:
-        print(f"❌ PDF to ZPL conversion failed: {e}")
+        print(f"[ERROR] PDF to ZPL conversion failed: {e}")
         return None
 
 def extract_pdf_text(pdf_path: str) -> list:
@@ -49,19 +49,19 @@ def extract_pdf_text(pdf_path: str) -> list:
             lines = result.stdout.strip().split('\n')
             # Filter out empty lines
             text_lines = [line.strip() for line in lines if line.strip()]
-            print(f"📄 Extracted {len(text_lines)} text lines from PDF")
+            print(f"[DOCUMENT] Extracted {len(text_lines)} text lines from PDF")
             return text_lines
         else:
-            print(f"⚠️  pdftotext failed: {result.stderr}")
+            print(f"[WARNING]️  pdftotext failed: {result.stderr}")
             return None
             
     except Exception as e:
-        print(f"⚠️  Text extraction failed: {e}")
+        print(f"[WARNING]️  Text extraction failed: {e}")
         return None
 
 def convert_text_to_zpl(text_lines: list) -> str:
     """Convert extracted text to ZPL commands."""
-    print("🔄 Converting text to ZPL...")
+    print("[PROCESS] Converting text to ZPL...")
     
     if not text_lines:
         return None
@@ -77,7 +77,7 @@ def convert_text_to_zpl(text_lines: list) -> str:
             }
             labels.append(label_data)
     
-    print(f"📋 Parsed {len(labels)} labels from PDF")
+    print(f"[INFO] Parsed {len(labels)} labels from PDF")
     
     # Create ZPL for each label with printer setup
     zpl_commands = []
@@ -132,14 +132,14 @@ def convert_text_to_zpl(text_lines: list) -> str:
     
     if zpl_commands:
         full_zpl = "\n".join(zpl_commands)
-        print(f"✅ Generated ZPL with {len(labels)} labels")
+        print(f"[OK] Generated ZPL with {len(labels)} labels")
         return full_zpl
     
     return None
 
 def convert_pdf_image_to_zpl(pdf_path: str) -> str:
     """Convert PDF to image and then to simple ZPL."""
-    print("🔄 Converting PDF via image method...")
+    print("[PROCESS] Converting PDF via image method...")
     
     try:
         # Convert PDF to image
@@ -153,7 +153,7 @@ def convert_pdf_image_to_zpl(pdf_path: str) -> str:
             ], capture_output=True, text=True, timeout=30)
             
             if result.returncode != 0:
-                print(f"⚠️  PDF to image conversion failed: {result.stderr}")
+                print(f"[WARNING]️  PDF to image conversion failed: {result.stderr}")
                 return create_fallback_zpl(pdf_path)
             
             # Find generated image
@@ -167,7 +167,7 @@ def convert_pdf_image_to_zpl(pdf_path: str) -> str:
             return create_fallback_zpl(pdf_path)
             
     except Exception as e:
-        print(f"⚠️  Image conversion failed: {e}")
+        print(f"[WARNING]️  Image conversion failed: {e}")
         return create_fallback_zpl(pdf_path)
 
 def create_fallback_zpl(pdf_path: str) -> str:
@@ -184,13 +184,13 @@ def create_fallback_zpl(pdf_path: str) -> str:
 ^FO200,170^A0N,15,15^FD{timestamp}^FS
 ^XZ"""
     
-    print(f"✅ Created fallback ZPL for {filename}")
+    print(f"[OK] Created fallback ZPL for {filename}")
     return zpl
 
 def print_zpl_to_zebra(zpl_commands: str, printer_name: str = "ZTC-ZD230-203dpi-ZPL") -> bool:
     """Print ZPL commands directly to Zebra printer."""
     try:
-        print(f"🖨️  Sending ZPL to {printer_name}...")
+        print(f"[PRINTER]️  Sending ZPL to {printer_name}...")
         
         process = subprocess.Popen(
             ['lp', '-d', printer_name, '-o', 'raw'],
@@ -203,12 +203,12 @@ def print_zpl_to_zebra(zpl_commands: str, printer_name: str = "ZTC-ZD230-203dpi-
         
         if process.returncode == 0:
             job_info = stdout.decode().strip()
-            print(f"✅ ZPL printed successfully: {job_info}")
+            print(f"[OK] ZPL printed successfully: {job_info}")
             return True
         else:
-            print(f"❌ ZPL printing failed: {stderr.decode()}")
+            print(f"[ERROR] ZPL printing failed: {stderr.decode()}")
             return False
             
     except Exception as e:
-        print(f"❌ ZPL printing error: {e}")
+        print(f"[ERROR] ZPL printing error: {e}")
         return False

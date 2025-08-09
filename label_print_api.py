@@ -58,7 +58,7 @@ def json_to_zpl(label_data):
         ]
     }
     """
-    logging.info(f"🔄 Converting {len(label_data['labels'])} labels to ZPL")
+    logging.info(f"[PROCESS] Converting {len(label_data['labels'])} labels to ZPL")
     
     zpl_commands = []
     
@@ -110,13 +110,13 @@ def json_to_zpl(label_data):
             zpl_commands.append("")
     
     zpl_string = "\n".join(zpl_commands)
-    logging.info(f"✅ Generated ZPL with {len(label_data['labels'])} labels")
+    logging.info(f"[OK] Generated ZPL with {len(label_data['labels'])} labels")
     return zpl_string
 
 def print_to_zebra(zpl_commands):
     """Send ZPL commands to Zebra printer."""
     try:
-        logging.info(f"🖨️  Sending ZPL to {PRINTER_NAME}")
+        logging.info(f"[PRINTER]️  Sending ZPL to {PRINTER_NAME}")
         
         process = subprocess.Popen(
             ['lp', '-d', PRINTER_NAME, '-o', 'raw'],
@@ -129,15 +129,15 @@ def print_to_zebra(zpl_commands):
         
         if process.returncode == 0:
             job_info = stdout.decode().strip()
-            logging.info(f"✅ ZPL printed successfully: {job_info}")
+            logging.info(f"[OK] ZPL printed successfully: {job_info}")
             return True, job_info
         else:
             error_msg = stderr.decode()
-            logging.error(f"❌ ZPL printing failed: {error_msg}")
+            logging.error(f"[ERROR] ZPL printing failed: {error_msg}")
             return False, error_msg
             
     except Exception as e:
-        logging.error(f"❌ ZPL printing error: {e}")
+        logging.error(f"[ERROR] ZPL printing error: {e}")
         return False, str(e)
 
 @app.route('/health', methods=['GET'])
@@ -195,7 +195,7 @@ def print_labels():
                 if field not in label:
                     return jsonify({"error": f"Label {i}: missing '{field}' field"}), 400
         
-        logging.info(f"📨 Received print request for {len(data['labels'])} labels")
+        logging.info(f"[POST] Received print request for {len(data['labels'])} labels")
         
         # Convert to ZPL
         zpl = json_to_zpl(data)
@@ -211,7 +211,7 @@ def print_labels():
                 "job_info": message,
                 "timestamp": datetime.now().isoformat()
             }
-            logging.info(f"✅ Print request completed successfully")
+            logging.info(f"[OK] Print request completed successfully")
             return jsonify(response)
         else:
             response = {
@@ -220,11 +220,11 @@ def print_labels():
                 "details": message,
                 "timestamp": datetime.now().isoformat()
             }
-            logging.error(f"❌ Print request failed: {message}")
+            logging.error(f"[ERROR] Print request failed: {message}")
             return jsonify(response), 500
             
     except Exception as e:
-        logging.error(f"❌ Print request error: {e}")
+        logging.error(f"[ERROR] Print request error: {e}")
         return jsonify({
             "success": False,
             "error": "Internal server error",
@@ -380,23 +380,23 @@ def auth_info():
         }), 500
 
 if __name__ == '__main__':
-    logging.info("🚀 Starting Label Printing API Server")
-    logging.info(f"📱 Printer: {PRINTER_NAME}")
-    logging.info("🔗 Endpoints:")
-    logging.info("   POST /print - Print labels (🔐 AUTH REQUIRED)")
+    logging.info("[START] Starting Label Printing API Server")
+    logging.info(f"[BROWSER] Printer: {PRINTER_NAME}")
+    logging.info("[URL] Endpoints:")
+    logging.info("   POST /print - Print labels ([AUTH] AUTH REQUIRED)")
     logging.info("   GET /health - Health check (public)")
-    logging.info("   GET /printer/status - Printer status (🔐 AUTH REQUIRED)")
+    logging.info("   GET /printer/status - Printer status ([AUTH] AUTH REQUIRED)")
     logging.info("   POST /auth/token - Generate API token")
-    logging.info("   GET /auth/tokens - List tokens (🔐 AUTH REQUIRED)")
-    logging.info("   DELETE /auth/token/<name> - Revoke token (🔐 AUTH REQUIRED)")
+    logging.info("   GET /auth/tokens - List tokens ([AUTH] AUTH REQUIRED)")
+    logging.info("   DELETE /auth/token/<name> - Revoke token ([AUTH] AUTH REQUIRED)")
     
     # Ensure default token exists on startup
     tokens = token_manager.get_all_tokens()
     if not tokens:
         default_token = token_manager.generate_token("default", "Default API access token")
-        logging.info(f"🔑 Generated default API token: {default_token}")
-        logging.info("🔐 SAVE THIS TOKEN - you'll need it for webhook authentication!")
+        logging.info(f"[TOKEN] Generated default API token: {default_token}")
+        logging.info("[AUTH] SAVE THIS TOKEN - you'll need it for webhook authentication!")
     else:
-        logging.info("🔐 API authentication enabled - tokens required for protected endpoints")
+        logging.info("[AUTH] API authentication enabled - tokens required for protected endpoints")
     
     app.run(host='0.0.0.0', port=5000, debug=False)

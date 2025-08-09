@@ -81,37 +81,37 @@ class ZebraPrintApplication:
     def run(self):
         """Run the application."""
         try:
-            print("🚀 Starting Zebra Print Control System...")
-            print(f"📂 Base directory: {self.settings.base_dir}")
-            print(f"🖨️  Printer: {self.settings.printer_name}")
-            print(f"🌐 API: {self.settings.api_host}:{self.settings.api_port}")
-            print(f"🔗 Tunnel: {self.settings.tunnel_name}")
+            print("[*] Starting Zebra Print Control System...")
+            print(f"[*] Base directory: {self.settings.base_dir}")
+            print(f"[*] Printer: {self.settings.printer_name}")
+            print(f"[*] API: {self.settings.api_host}:{self.settings.api_port}")
+            print(f"[*] Tunnel: {self.settings.tunnel_name}")
             
             # Run the main menu
             self.menu_controller.run()
             
         except KeyboardInterrupt:
-            print("\n🛑 Application interrupted by user")
+            print("\n[!] Application interrupted by user")
             self._cleanup()
         except Exception as e:
-            print(f"\n❌ Application error: {e}")
+            print(f"\n[ERROR] Application error: {e}")
             self._cleanup()
             sys.exit(1)
     
     def _cleanup(self):
         """Cleanup resources before exit."""
-        print("\n🧹 Cleaning up...")
+        print("\n[*] Cleaning up...")
         
         try:
             # Stop API service if running
             if self.api_service.is_running():
-                print("🛑 Stopping API service...")
+                print("[*] Stopping API service...")
                 self.api_service.stop()
             
             # Stop any active tunnels
             for tunnel in self.tunnel_providers.values():
                 if tunnel.is_active():
-                    print(f"🛑 Stopping {tunnel.name} tunnel...")
+                    print(f"[*] Stopping {tunnel.name} tunnel...")
                     tunnel.stop()
             
             # Close API client session
@@ -119,9 +119,9 @@ class ZebraPrintApplication:
                 self.api_client.close()
                 
         except Exception as e:
-            print(f"⚠️  Cleanup warning: {e}")
+            print(f"[WARNING] Cleanup warning: {e}")
         
-        print("✅ Cleanup completed")
+        print("[*] Cleanup completed")
 
 def main():
     """Application entry point."""

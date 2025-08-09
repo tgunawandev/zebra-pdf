@@ -169,13 +169,13 @@ class CloudflareNamedTunnel(TunnelProvider):
             for filename in os.listdir(self.config_dir):
                 if filename.endswith('.json'):
                     credentials_file = os.path.join(self.config_dir, filename)
-                    print(f"⚠️ Using fallback credentials: {credentials_file}")
+                    print(f"[WARNING]️ Using fallback credentials: {credentials_file}")
                     break
         
         if not credentials_file:
             raise Exception("No tunnel credentials found. Run 'cloudflared tunnel login' first.")
         
-        print(f"✅ Using credentials: {credentials_file}")
+        print(f"[OK] Using credentials: {credentials_file}")
         
         config = {
             'tunnel': self.tunnel_name,

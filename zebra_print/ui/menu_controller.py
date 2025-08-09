@@ -27,23 +27,23 @@ class MenuController:
     
     def display_main_menu(self):
         """Display the main menu options."""
-        print("\n📋 MAIN MENU:")
-        print("1. 📊 System Status")
-        print("2. 🚀 Start API Server")
-        print("3. 🛑 Stop API Server")
-        print("4. 🌐 Setup Tunnel")
-        print("5. 🔗 Start Tunnel")
-        print("6. ⏹️  Stop Tunnel")
-        print("7. 🖨️  Printer Management")
-        print("8. 🧪 Test Functions")
-        print("9. 📤 Integration Test")
-        print("A. 🔐 API Security")
-        print("0. 🚪 Exit")
+        print("\n[INFO] MAIN MENU:")
+        print("1. [STATUS] System Status")
+        print("2. [START] Start API Server")
+        print("3. [STOP] Stop API Server")
+        print("4. [TUNNEL] Setup Tunnel")
+        print("5. [URL] Start Tunnel")
+        print("6. [STOP]  Stop Tunnel")
+        print("7. [PRINTER]️  Printer Management")
+        print("8. [TEST] Test Functions")
+        print("9. [SEND] Integration Test")
+        print("A. [AUTH] API Security")
+        print("0. [EXIT] Exit")
         print("-" * 40)
     
     def display_system_status(self):
         """Display comprehensive system status."""
-        print("\n📊 SYSTEM STATUS:")
+        print("\n[STATUS] SYSTEM STATUS:")
         print("=" * 50)
         
         try:
@@ -51,7 +51,7 @@ class MenuController:
             
             # API Status
             api_status = status['api']
-            api_icon = "🟢" if api_status['running'] else "🔴"
+            api_icon = "[ONLINE]" if api_status['running'] else "[OFFLINE]"
             print(f"\n{api_icon} API Server:")
             print(f"   Status: {'Running' if api_status['running'] else 'Stopped'}")
             if api_status['details']:
@@ -62,7 +62,7 @@ class MenuController:
             
             # Printer Status
             printer_status = status['printer']
-            printer_icon = "🟢" if printer_status['ready'] else "🔴"
+            printer_icon = "[ONLINE]" if printer_status['ready'] else "[OFFLINE]"
             print(f"\n{printer_icon} Printer:")
             print(f"   Ready: {'Yes' if printer_status['ready'] else 'No'}")
             if printer_status['details']:
@@ -75,7 +75,7 @@ class MenuController:
             # Tunnel Status
             tunnel_info = status['tunnel']
             if tunnel_info:
-                tunnel_icon = "🟢"
+                tunnel_icon = "[ONLINE]"
                 print(f"\n{tunnel_icon} Tunnel ({tunnel_info['name']}):")
                 print(f"   Type: {'Permanent' if tunnel_info['is_permanent'] else 'Temporary'}")
                 tunnel_status = tunnel_info.get('status', {})
@@ -84,10 +84,10 @@ class MenuController:
                 if tunnel_status.get('active'):
                     print(f"   Status: Active")
             else:
-                print(f"\n🔴 Tunnel: Not configured")
+                print(f"\n[OFFLINE] Tunnel: Not configured")
             
             # Overall Integration Status
-            integration_icon = "🟢" if status['integration_ready'] else "🔴"
+            integration_icon = "[ONLINE]" if status['integration_ready'] else "[OFFLINE]"
             print(f"\n{integration_icon} Integration:")
             print(f"   Ready: {'Yes' if status['integration_ready'] else 'No'}")
             
@@ -97,34 +97,34 @@ class MenuController:
             # Recommendations
             actions = self.system_status.get_recommended_actions()
             if actions:
-                print(f"\n💡 RECOMMENDED ACTIONS:")
+                print(f"\n[INFO] RECOMMENDED ACTIONS:")
                 for i, action in enumerate(actions, 1):
                     print(f"   {i}. {action}")
                     
         except Exception as e:
-            print(f"❌ Error getting system status: {e}")
+            print(f"[ERROR] Error getting system status: {e}")
         
         print("\n" + "=" * 50)
     
     def display_printer_menu(self):
         """Display printer management menu."""
-        print("\n🖨️  PRINTER MANAGEMENT:")
-        print("1. 📋 Printer Status")
-        print("2. 🔧 Setup/Configure Printer")
-        print("3. 🧪 Test Connection")
-        print("4. 📄 Print Test Label")
-        print("5. 📝 List All Printers")
-        print("0. ⬅️  Back to Main Menu")
+        print("\n[PRINTER]️  PRINTER MANAGEMENT:")
+        print("1. [INFO] Printer Status")
+        print("2. [CONFIG] Setup/Configure Printer")
+        print("3. [TEST] Test Connection")
+        print("4. [DOCUMENT] Print Test Label")
+        print("5. [INPUT] List All Printers")
+        print("0. [BACK]  Back to Main Menu")
     
     def display_test_menu(self):
         """Display test functions menu."""
-        print("\n🧪 TEST FUNCTIONS:")
-        print("1. 🏥 API Health Check")
-        print("2. 🌐 Tunnel Connection Test")
-        print("3. 📄 Print Sample Label (Local API)")
-        print("4. 🌍 Print Sample Label (via Tunnel)")
-        print("5. 📋 Custom Label Test")
-        print("0. ⬅️  Back to Main Menu")
+        print("\n[TEST] TEST FUNCTIONS:")
+        print("1. [HEALTH] API Health Check")
+        print("2. [TUNNEL] Tunnel Connection Test")
+        print("3. [DOCUMENT] Print Sample Label (Local API)")
+        print("4. [WORLD] Print Sample Label (via Tunnel)")
+        print("5. [INFO] Custom Label Test")
+        print("0. [BACK]  Back to Main Menu")
     
     def handle_printer_management(self):
         """Handle printer management operations."""
@@ -145,7 +145,7 @@ class MenuController:
             elif choice == "5":
                 self._list_all_printers()
             else:
-                print("❌ Invalid option")
+                print("[ERROR] Invalid option")
             
             input("\nPress Enter to continue...")
     
@@ -168,13 +168,13 @@ class MenuController:
             elif choice == "5":
                 self._test_custom_label()
             else:
-                print("❌ Invalid option")
+                print("[ERROR] Invalid option")
             
             input("\nPress Enter to continue...")
     
     def _show_printer_status(self):
         """Show detailed printer status."""
-        print("\n📊 PRINTER STATUS:")
+        print("\n[STATUS] PRINTER STATUS:")
         printer_service = self.system_status.printer_service
         status = printer_service.get_status()
         
@@ -183,7 +183,7 @@ class MenuController:
     
     def _setup_printer(self):
         """Setup/configure printer."""
-        print("\n🔧 PRINTER SETUP:")
+        print("\n[CONFIG] PRINTER SETUP:")
         printer_service = self.system_status.printer_service
         
         if hasattr(printer_service, 'setup_printer'):
@@ -191,41 +191,41 @@ class MenuController:
             success, message = printer_service.setup_printer()
             
             if success:
-                print(f"✅ {message}")
+                print(f"[OK] {message}")
             else:
-                print(f"❌ {message}")
+                print(f"[ERROR] {message}")
         else:
-            print("❌ Printer setup not supported by this printer service")
+            print("[ERROR] Printer setup not supported by this printer service")
     
     def _test_printer_connection(self):
         """Test printer connection."""
-        print("\n🧪 TESTING PRINTER CONNECTION:")
+        print("\n[TEST] TESTING PRINTER CONNECTION:")
         printer_service = self.system_status.printer_service
         success, message = printer_service.test_connection()
         
         if success:
-            print(f"✅ {message}")
+            print(f"[OK] {message}")
         else:
-            print(f"❌ {message}")
+            print(f"[ERROR] {message}")
     
     def _print_test_label(self):
         """Print test label."""
-        print("\n📄 PRINTING TEST LABEL:")
+        print("\n[DOCUMENT] PRINTING TEST LABEL:")
         printer_service = self.system_status.printer_service
         
         if hasattr(printer_service, 'print_test_label'):
             success, message = printer_service.print_test_label()
             
             if success:
-                print(f"✅ {message}")
+                print(f"[OK] {message}")
             else:
-                print(f"❌ {message}")
+                print(f"[ERROR] {message}")
         else:
-            print("❌ Test label printing not supported by this printer service")
+            print("[ERROR] Test label printing not supported by this printer service")
     
     def _list_all_printers(self):
         """List all available printers."""
-        print("\n📝 AVAILABLE PRINTERS:")
+        print("\n[INPUT] AVAILABLE PRINTERS:")
         printer_service = self.system_status.printer_service
         
         if hasattr(printer_service, 'get_printer_list'):
@@ -233,15 +233,15 @@ class MenuController:
             
             if printers:
                 for name, status in printers.items():
-                    print(f"   • {name}: {status}")
+                    print(f"   * {name}: {status}")
             else:
                 print("   No printers found")
         else:
-            print("❌ Printer listing not supported by this printer service")
+            print("[ERROR] Printer listing not supported by this printer service")
     
     def _test_api_health(self):
         """Test API health."""
-        print("\n🏥 TESTING API HEALTH:")
+        print("\n[HEALTH] TESTING API HEALTH:")
         api_status = self.system_status.api_service.get_status()
         
         if api_status['running']:
@@ -249,17 +249,17 @@ class MenuController:
             success, data = self.label_service.test_api_connection(url)
             
             if success:
-                print(f"✅ API is healthy")
+                print(f"[OK] API is healthy")
                 if data:
                     print(f"   Response: {data}")
             else:
-                print(f"❌ API health check failed: {data}")
+                print(f"[ERROR] API health check failed: {data}")
         else:
-            print("❌ API server is not running")
+            print("[ERROR] API server is not running")
     
     def _test_tunnel_connection(self):
         """Test tunnel connection."""
-        print("\n🌐 TESTING TUNNEL CONNECTION:")
+        print("\n[TUNNEL] TESTING TUNNEL CONNECTION:")
         active_tunnel = self.system_status.get_active_tunnel()
         
         if active_tunnel:
@@ -270,26 +270,26 @@ class MenuController:
                 success, data = self.label_service.test_tunnel_connection(url, active_tunnel.name)
                 
                 if success:
-                    print(f"✅ Tunnel connection successful")
+                    print(f"[OK] Tunnel connection successful")
                     if data:
                         print(f"   Response: {data}")
                 else:
-                    print(f"❌ Tunnel connection failed: {data}")
+                    print(f"[ERROR] Tunnel connection failed: {data}")
             else:
-                print("❌ Tunnel URL not available")
+                print("[ERROR] Tunnel URL not available")
         else:
-            print("❌ No active tunnel found")
+            print("[ERROR] No active tunnel found")
     
     def _test_local_print(self):
         """Test local API printing."""
-        print("\n📄 TESTING LOCAL API PRINT:")
+        print("\n[DOCUMENT] TESTING LOCAL API PRINT:")
         api_status = self.system_status.api_service.get_status()
         
         if api_status['running']:
             # Get authentication token
             token = self._get_token_for_testing()
             if not token:
-                print("❌ No token provided - test cancelled")
+                print("[ERROR] No token provided - test cancelled")
                 return
             
             labels = [self.label_service.create_sample_label("LOCAL")]
@@ -300,18 +300,18 @@ class MenuController:
             success, message, data = self.label_service.api_client.print_labels(url, labels, headers)
             
             if success:
-                print(f"✅ {message}")
+                print(f"[OK] {message}")
             else:
-                print(f"❌ {message}")
+                print(f"[ERROR] {message}")
                 
             if data:
                 print(f"   Response: {data}")
         else:
-            print("❌ API server is not running")
+            print("[ERROR] API server is not running")
     
     def _test_tunnel_print(self):
         """Test tunnel printing."""
-        print("\n🌍 TESTING TUNNEL PRINT:")
+        print("\n[WORLD] TESTING TUNNEL PRINT:")
         active_tunnel = self.system_status.get_active_tunnel()
         
         if active_tunnel:
@@ -322,7 +322,7 @@ class MenuController:
                 # Get authentication token
                 token = self._get_token_for_testing()
                 if not token:
-                    print("❌ No token provided - test cancelled")
+                    print("[ERROR] No token provided - test cancelled")
                     return
                 
                 labels = [self.label_service.create_sample_label("TUNNEL")]
@@ -333,20 +333,20 @@ class MenuController:
                 success, message, data = self.label_service.api_client.print_labels(print_url, labels, headers)
                 
                 if success:
-                    print(f"✅ {message}")
+                    print(f"[OK] {message}")
                 else:
-                    print(f"❌ {message}")
+                    print(f"[ERROR] {message}")
                     
                 if data:
                     print(f"   Response: {data}")
             else:
-                print("❌ Tunnel URL not available")
+                print("[ERROR] Tunnel URL not available")
         else:
-            print("❌ No active tunnel found")
+            print("[ERROR] No active tunnel found")
     
     def _test_custom_label(self):
         """Test custom label creation and printing."""
-        print("\n📋 CUSTOM LABEL TEST:")
+        print("\n[INFO] CUSTOM LABEL TEST:")
         print("Enter label details:")
         
         title = input("Title: ").strip() or "CUSTOM-LABEL"
@@ -357,7 +357,7 @@ class MenuController:
         is_valid, message = self.label_service.validate_label_data(label)
         
         if is_valid:
-            print(f"✅ Label validation: {message}")
+            print(f"[OK] Label validation: {message}")
             print(f"   Created: {label}")
             
             # Ask where to print
@@ -371,9 +371,9 @@ class MenuController:
                 if api_status['running']:
                     url = f"http://{api_status['host']}:{api_status['port']}/print"
                     success, msg, data = self.label_service.print_labels_local([label], url)
-                    print(f"{'✅' if success else '❌'} {msg}")
+                    print(f"{'[OK]' if success else '[ERROR]'} {msg}")
                 else:
-                    print("❌ API server not running")
+                    print("[ERROR] API server not running")
                     
             elif choice == "2":
                 active_tunnel = self.system_status.get_active_tunnel()
@@ -382,13 +382,13 @@ class MenuController:
                     url = tunnel_status.get('url')
                     if url:
                         success, msg, data = self.label_service.print_labels_tunnel([label], url, active_tunnel.name)
-                        print(f"{'✅' if success else '❌'} {msg}")
+                        print(f"{'[OK]' if success else '[ERROR]'} {msg}")
                     else:
-                        print("❌ Tunnel URL not available")
+                        print("[ERROR] Tunnel URL not available")
                 else:
-                    print("❌ No active tunnel")
+                    print("[ERROR] No active tunnel")
         else:
-            print(f"❌ Label validation failed: {message}")
+            print(f"[ERROR] Label validation failed: {message}")
     
     def run(self):
         """Run the main menu loop."""
@@ -402,7 +402,7 @@ class MenuController:
                 
                 if choice == "0":
                     self.running = False
-                    print("\n👋 Goodbye!")
+                    print("\n[BYE] Goodbye!")
                 elif choice == "1":
                     # Status already shown above
                     input("\nPress Enter to continue...")
@@ -425,46 +425,46 @@ class MenuController:
                 elif choice.upper() == "A":
                     self._api_security_menu()
                 else:
-                    print("❌ Invalid option")
+                    print("[ERROR] Invalid option")
                     input("\nPress Enter to continue...")
                     
         except KeyboardInterrupt:
-            print("\n\n👋 Exiting...")
+            print("\n\n[BYE] Exiting...")
             self.running = False
         except Exception as e:
-            print(f"\n❌ An error occurred: {e}")
+            print(f"\n[ERROR] An error occurred: {e}")
             input("\nPress Enter to continue...")
     
     def _start_api_server(self):
         """Start API server."""
-        print("\n🚀 STARTING API SERVER...")
+        print("\n[START] STARTING API SERVER...")
         
         # Check if API is already running (supervisor mode)
         try:
             import requests
             response = requests.get("http://localhost:5000/health", timeout=5)
             if response.status_code == 200:
-                print("✅ API server already running (managed by supervisor)")
-                print("ℹ️ In Docker mode, API runs automatically via supervisor")
+                print("[OK] API server already running (managed by supervisor)")
+                print("[INFO] In Docker mode, API runs automatically via supervisor")
                 input("\nPress Enter to continue...")
                 return
         except:
             pass
         
         success, message = self.system_status.api_service.start()
-        print(f"{'✅' if success else '❌'} {message}")
+        print(f"{'[OK]' if success else '[ERROR]'} {message}")
         input("\nPress Enter to continue...")
     
     def _stop_api_server(self):
         """Stop API server."""
-        print("\n🛑 STOPPING API SERVER...")
+        print("\n[STOP] STOPPING API SERVER...")
         success, message = self.system_status.api_service.stop()
-        print(f"{'✅' if success else '❌'} {message}")
+        print(f"{'[OK]' if success else '[ERROR]'} {message}")
         input("\nPress Enter to continue...")
     
     def _setup_tunnel(self):
         """Setup tunnel."""
-        print("\n🌐 TUNNEL SETUP:")
+        print("\n[TUNNEL] TUNNEL SETUP:")
         print("1. Cloudflare Named Tunnel (Permanent URL with Custom Domain)")
         print("2. Cloudflare Quick Tunnel (Temporary URL)")
         print("3. Ngrok (Temporary URL)")
@@ -477,62 +477,62 @@ class MenuController:
             # Cloudflare Quick Tunnel
             if "cloudflare_quick" in self.system_status.tunnel_providers:
                 tunnel = self.system_status.tunnel_providers["cloudflare_quick"]
-                print(f"\n🔧 Setting up Cloudflare Quick Tunnel...")
+                print(f"\n[CONFIG] Setting up Cloudflare Quick Tunnel...")
                 success, message = tunnel.setup()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
                 if success:
-                    print("\n💡 Quick tunnels provide instant URLs without domain ownership!")
-                    print("💡 Perfect for testing - no DNS setup required!")
+                    print("\n[INFO] Quick tunnels provide instant URLs without domain ownership!")
+                    print("[INFO] Perfect for testing - no DNS setup required!")
             else:
-                print("❌ Cloudflare Quick tunnel provider not available")
+                print("[ERROR] Cloudflare Quick tunnel provider not available")
         elif choice == "3":
             # Ngrok
             if "ngrok" in self.system_status.tunnel_providers:
                 tunnel = self.system_status.tunnel_providers["ngrok"]
-                print(f"\n🔧 Setting up Ngrok tunnel...")
+                print(f"\n[CONFIG] Setting up Ngrok tunnel...")
                 success, message = tunnel.setup()
-                print(f"{'✅' if success else '❌'} {message}")
+                print(f"{'[OK]' if success else '[ERROR]'} {message}")
             else:
-                print("❌ Ngrok tunnel provider not available")
+                print("[ERROR] Ngrok tunnel provider not available")
         else:
-            print("❌ Invalid option")
+            print("[ERROR] Invalid option")
         
         input("\nPress Enter to continue...")
     
     def _setup_cloudflare_named_tunnel(self):
         """Setup Cloudflare Named Tunnel with custom domain input."""
-        print("\n🏗️ CLOUDFLARE NAMED TUNNEL SETUP")
+        print("\n[SETUP] CLOUDFLARE NAMED TUNNEL SETUP")
         print("=" * 40)
         
         # Import here to avoid circular imports
         from zebra_print.tunnel.cloudflare_named import CloudflareNamedTunnel
         
-        print("ℹ️  Named tunnels provide permanent URLs with your custom domain")
-        print("📋 Examples:")
-        print("   • tln-zebra-01.abcfood.app")
-        print("   • printer-hq.mycompany.com")
-        print("   • zebra-label.mydomain.org")
+        print("[INFO]  Named tunnels provide permanent URLs with your custom domain")
+        print("[INFO] Examples:")
+        print("   * tln-zebra-01.abcfood.app")
+        print("   * printer-hq.mycompany.com")
+        print("   * zebra-label.mydomain.org")
         print()
         
         # Get custom domain from user
         while True:
-            domain = input("🌐 Enter your custom domain: ").strip()
+            domain = input("[TUNNEL] Enter your custom domain: ").strip()
             
             if not domain:
-                print("❌ Domain cannot be empty")
+                print("[ERROR] Domain cannot be empty")
                 continue
             
             if '.' not in domain:
-                print("❌ Please enter a valid domain (e.g., subdomain.yourdomain.com)")
+                print("[ERROR] Please enter a valid domain (e.g., subdomain.yourdomain.com)")
                 continue
             
             if ' ' in domain or domain != domain.lower():
-                print("❌ Domain should be lowercase without spaces")
+                print("[ERROR] Domain should be lowercase without spaces")
                 continue
             
             # Confirm domain
-            print(f"🎯 Your webhook URL will be: https://{domain}/print")
-            confirm = input("✅ Is this correct? (y/n): ").strip().lower()
+            print(f"[TARGET] Your webhook URL will be: https://{domain}/print")
+            confirm = input("[OK] Is this correct? (y/n): ").strip().lower()
             
             if confirm in ['y', 'yes']:
                 break
@@ -546,58 +546,58 @@ class MenuController:
         # Set the custom domain
         success, message = tunnel.set_custom_domain(domain)
         if not success:
-            print(f"❌ Failed to set domain: {message}")
+            print(f"[ERROR] Failed to set domain: {message}")
             return
         
-        print(f"✅ {message}")
+        print(f"[OK] {message}")
         
         # Check authentication
-        print("\n🔐 Checking Cloudflare authentication...")
+        print("\n[AUTH] Checking Cloudflare authentication...")
         import os
         cert_path = os.path.expanduser("~/.cloudflared/cert.pem")
         
         if not os.path.exists(cert_path):
-            print("❌ Cloudflare authentication required")
-            print("🔗 Please run this command first:")
+            print("[ERROR] Cloudflare authentication required")
+            print("[URL] Please run this command first:")
             print("   cloudflared tunnel login")
             print("\nThis will:")
             print("1. Open browser to Cloudflare login")
             print("2. Select your domain")
             print("3. Authorize cloudflared")
             
-            auth_done = input("\n✅ Press Enter after completing authentication...")
+            auth_done = input("\n[OK] Press Enter after completing authentication...")
             
             # Check again
             if not os.path.exists(cert_path):
-                print("❌ Authentication still not detected. Please complete authentication first.")
+                print("[ERROR] Authentication still not detected. Please complete authentication first.")
                 return
         
         # Setup the tunnel
-        print(f"\n🔧 Setting up Named Tunnel for {domain}...")
+        print(f"\n[CONFIG] Setting up Named Tunnel for {domain}...")
         success, message = tunnel.setup()
         
         if success:
-            print(f"✅ {message}")
-            print(f"🌐 Your permanent webhook URL: https://{domain}/print")
-            print("📋 Use this URL in your Odoo webhook configuration")
+            print(f"[OK] {message}")
+            print(f"[TUNNEL] Your permanent webhook URL: https://{domain}/print")
+            print("[INFO] Use this URL in your Odoo webhook configuration")
         else:
-            print(f"❌ Setup failed: {message}")
+            print(f"[ERROR] Setup failed: {message}")
             
             if "authentication" in message.lower():
-                print("\n💡 Try running: cloudflared tunnel login")
+                print("\n[INFO] Try running: cloudflared tunnel login")
             elif "dns" in message.lower() or "domain" in message.lower():
-                print(f"\n💡 Make sure {domain} is managed by Cloudflare DNS")
+                print(f"\n[INFO] Make sure {domain} is managed by Cloudflare DNS")
                 print("   1. Add domain to Cloudflare")
                 print("   2. Update nameservers")
                 print("   3. Verify domain is active")
     
     def _start_tunnel(self):
         """Start tunnel."""
-        print("\n🔗 STARTING TUNNEL:")
+        print("\n[URL] STARTING TUNNEL:")
         active_tunnel = self.system_status.get_active_tunnel()
         
         if active_tunnel and active_tunnel.is_active():
-            print(f"✅ {active_tunnel.name.title()} tunnel already active")
+            print(f"[OK] {active_tunnel.name.title()} tunnel already active")
             status = active_tunnel.get_status()
             if status.get('url'):
                 print(f"   URL: {status['url']}")
@@ -614,7 +614,7 @@ class MenuController:
             elif choice == "3":
                 tunnel_name = "ngrok"
             else:
-                print("❌ Invalid option")
+                print("[ERROR] Invalid option")
                 input("\nPress Enter to continue...")
                 return
             
@@ -625,61 +625,61 @@ class MenuController:
                 if tunnel_name == "cloudflare_named":
                     stored_config = self.system_status.db.get_tunnel_config(tunnel_name)
                     if not stored_config or not stored_config.is_configured:
-                        print("❌ Named tunnel not configured yet")
-                        print("💡 Please run 'Setup Tunnel' first and configure your domain")
+                        print("[ERROR] Named tunnel not configured yet")
+                        print("[INFO] Please run 'Setup Tunnel' first and configure your domain")
                         input("\nPress Enter to continue...")
                         return
                 
-                print(f"\n🚀 Starting {tunnel_name.replace('_', ' ').title()} tunnel...")
+                print(f"\n[START] Starting {tunnel_name.replace('_', ' ').title()} tunnel...")
                 success, message, url = tunnel.start()
                 
                 if success:
-                    print(f"✅ {message}")
+                    print(f"[OK] {message}")
                     if url:
-                        print(f"🌐 URL: {url}")
+                        print(f"[TUNNEL] URL: {url}")
                         if tunnel_name == "cloudflare_named":
-                            print(f"🔗 Webhook URL: {url}/print")
+                            print(f"[URL] Webhook URL: {url}/print")
                 else:
-                    print(f"❌ {message}")
+                    print(f"[ERROR] {message}")
             else:
-                print(f"❌ {tunnel_name.title()} tunnel provider not available")
+                print(f"[ERROR] {tunnel_name.title()} tunnel provider not available")
         
         input("\nPress Enter to continue...")
     
     def _stop_tunnel(self):
         """Stop tunnel."""
-        print("\n⏹️  STOPPING TUNNEL...")
+        print("\n[STOP]  STOPPING TUNNEL...")
         active_tunnel = self.system_status.get_active_tunnel()
         
         if active_tunnel:
             success, message = active_tunnel.stop()
-            print(f"{'✅' if success else '❌'} {message}")
+            print(f"{'[OK]' if success else '[ERROR]'} {message}")
         else:
-            print("✅ No active tunnel to stop")
+            print("[OK] No active tunnel to stop")
         
         input("\nPress Enter to continue...")
     
     def _integration_test(self):
         """Run comprehensive integration test."""
-        print("\n📤 INTEGRATION TEST:")
+        print("\n[SEND] INTEGRATION TEST:")
         print("Testing complete system integration...")
         
         # Check if system is ready
         if not self.system_status.is_system_ready():
-            print("❌ System not ready for integration test")
+            print("[ERROR] System not ready for integration test")
             actions = self.system_status.get_recommended_actions()
             print("   Required actions:")
             for action in actions:
-                print(f"   • {action}")
+                print(f"   * {action}")
         else:
-            print("✅ System is ready")
+            print("[OK] System is ready")
             
             # Test webhook URL
             status = self.system_status.get_overall_status()
             webhook_url = status.get('webhook_url')
             
             if webhook_url:
-                print(f"🔗 Webhook URL: {webhook_url}")
+                print(f"[URL] Webhook URL: {webhook_url}")
                 
                 # Create test labels
                 labels = [
@@ -687,7 +687,7 @@ class MenuController:
                     self.label_service.create_sample_label("INT-TEST-2")
                 ]
                 
-                print("📤 Sending test labels via webhook...")
+                print("[SEND] Sending test labels via webhook...")
                 active_tunnel = self.system_status.get_active_tunnel()
                 
                 success, message, data = self.label_service.print_labels_tunnel(
@@ -695,26 +695,26 @@ class MenuController:
                 )
                 
                 if success:
-                    print(f"✅ Integration test successful: {message}")
+                    print(f"[OK] Integration test successful: {message}")
                     print("   Your Odoo webhook integration is ready!")
                 else:
-                    print(f"❌ Integration test failed: {message}")
+                    print(f"[ERROR] Integration test failed: {message}")
             else:
-                print("❌ Webhook URL not available")
+                print("[ERROR] Webhook URL not available")
         
         input("\nPress Enter to continue...")
     
     def _api_security_menu(self):
         """Handle API security and token management."""
         while True:
-            print("\n🔐 API SECURITY MANAGEMENT:")
-            print("1. 📋 List API Tokens")
-            print("2. 🔑 Generate New Token") 
-            print("3. 🗑️  Revoke Token")
-            print("4. 🧪 Test Authentication")
-            print("5. 📖 Show Integration Examples")
-            print("6. 🔍 Show Default Token")
-            print("0. ⬅️  Back to Main Menu")
+            print("\n[AUTH] API SECURITY MANAGEMENT:")
+            print("1. [INFO] List API Tokens")
+            print("2. [KEY] Generate New Token") 
+            print("3. [DELETE]  Revoke Token")
+            print("4. [TEST] Test Authentication")
+            print("5. [DOCS] Show Integration Examples")
+            print("6. [SEARCH] Show Default Token")
+            print("0. [BACK]  Back to Main Menu")
             
             choice = input("\nSelect option: ").strip()
             
@@ -733,20 +733,20 @@ class MenuController:
             elif choice == "6":
                 self._show_default_token()
             else:
-                print("❌ Invalid option")
+                print("[ERROR] Invalid option")
             
             input("\nPress Enter to continue...")
     
     def _list_api_tokens(self):
         """List all API tokens."""
-        print("\n📋 API TOKENS:")
+        print("\n[INFO] API TOKENS:")
         
         try:
             import requests
             api_status = self.system_status.api_service.get_status()
             
             if not api_status['running']:
-                print("❌ API server not running. Start it first.")
+                print("[ERROR] API server not running. Start it first.")
                 return
             
             # Get token information
@@ -758,15 +758,15 @@ class MenuController:
                 self._display_tokens(data['tokens'])
                 
                 if data['total_tokens'] == 1 and data['tokens'][0]['name'] == 'default':
-                    print("\n💡 You have a default token generated at startup")
-                    print("💡 Check the container logs for the token value:")
-                    print("   docker logs zebra-print-control | grep '🔑 Generated'")
+                    print("\n[INFO] You have a default token generated at startup")
+                    print("[INFO] Check the container logs for the token value:")
+                    print("   docker logs zebra-print-control | grep '[KEY] Generated'")
             else:
-                print("❌ Failed to get token information")
-                print("💡 Generate your first token using option 2")
+                print("[ERROR] Failed to get token information")
+                print("[INFO] Generate your first token using option 2")
                 
         except Exception as e:
-            print(f"❌ Error listing tokens: {e}")
+            print(f"[ERROR] Error listing tokens: {e}")
     
     def _display_tokens(self, tokens):
         """Display token information in a table format."""
@@ -786,14 +786,14 @@ class MenuController:
     
     def _generate_api_token(self):
         """Generate a new API token."""
-        print("\n🔑 GENERATE NEW API TOKEN:")
+        print("\n[KEY] GENERATE NEW API TOKEN:")
         
         try:
             import requests
             api_status = self.system_status.api_service.get_status()
             
             if not api_status['running']:
-                print("❌ API server not running. Start it first.")
+                print("[ERROR] API server not running. Start it first.")
                 return
             
             # First check if there's a default token that can be retrieved
@@ -806,9 +806,9 @@ class MenuController:
                     info_data['tokens'][0]['name'] == 'default' and 
                     info_data['tokens'][0]['is_active']):
                     
-                    print("💡 You already have a default token!")
-                    print("💡 To get the token value, check the startup logs:")
-                    print("   docker logs zebra-print-control | grep '🔑 Generated'")
+                    print("[INFO] You already have a default token!")
+                    print("[INFO] To get the token value, check the startup logs:")
+                    print("   docker logs zebra-print-control | grep '[KEY] Generated'")
                     
                     choice = input("\nGenerate additional token? (y/N): ").strip().lower()
                     if choice not in ['y', 'yes']:
@@ -828,11 +828,11 @@ class MenuController:
                 data = response.json()
                 token = data['token']
                 
-                print(f"\n✅ Token generated successfully!")
-                print(f"🔑 Token: {token}")
-                print(f"📝 Name: {name}")
-                print(f"\n🔐 SAVE THIS TOKEN - you cannot retrieve it again!")
-                print(f"\n💡 Webhook Integration Examples:")
+                print(f"\n[OK] Token generated successfully!")
+                print(f"[KEY] Token: {token}")
+                print(f"[INPUT] Name: {name}")
+                print(f"\n[AUTH] SAVE THIS TOKEN - you cannot retrieve it again!")
+                print(f"\n[INFO] Webhook Integration Examples:")
                 print(f"   Header: Authorization: Bearer {token}")
                 print(f"   Query:  /print?token={token}")
                 
@@ -841,34 +841,34 @@ class MenuController:
                 
             else:
                 error_data = response.json()
-                print(f"❌ Failed to generate token: {error_data.get('message', 'Unknown error')}")
+                print(f"[ERROR] Failed to generate token: {error_data.get('message', 'Unknown error')}")
                 
                 if "Authentication required" in error_data.get('message', ''):
-                    print("\n💡 To generate additional tokens, you need an existing valid token")
-                    print("💡 Get your default token from startup logs:")
-                    print("   docker logs zebra-print-control | grep '🔑 Generated'")
+                    print("\n[INFO] To generate additional tokens, you need an existing valid token")
+                    print("[INFO] Get your default token from startup logs:")
+                    print("   docker logs zebra-print-control | grep '[KEY] Generated'")
                 elif "already exists" in error_data.get('message', ''):
-                    print(f"\n💡 Token name '{name}' already exists. Try a different name.")
-                    print("💡 Use option 1 to see existing token names.")
+                    print(f"\n[INFO] Token name '{name}' already exists. Try a different name.")
+                    print("[INFO] Use option 1 to see existing token names.")
                 
         except Exception as e:
-            print(f"❌ Error generating token: {e}")
+            print(f"[ERROR] Error generating token: {e}")
     
     def _revoke_api_token(self):
         """Revoke an API token."""
-        print("\n🗑️  REVOKE API TOKEN:")
+        print("\n[DELETE]  REVOKE API TOKEN:")
         
         # First list existing tokens
         self._list_api_tokens()
         
         name = input("\nEnter token name to revoke: ").strip()
         if not name:
-            print("❌ Token name required")
+            print("[ERROR] Token name required")
             return
         
-        confirm = input(f"⚠️  Are you sure you want to revoke '{name}'? (y/N): ").strip().lower()
+        confirm = input(f"[WARNING]️  Are you sure you want to revoke '{name}'? (y/N): ").strip().lower()
         if confirm not in ['y', 'yes']:
-            print("❌ Revocation cancelled")
+            print("[ERROR] Revocation cancelled")
             return
         
         try:
@@ -883,21 +883,21 @@ class MenuController:
             response = requests.delete(url, headers=headers, timeout=5)
             
             if response.status_code == 200:
-                print(f"✅ Token '{name}' revoked successfully")
+                print(f"[OK] Token '{name}' revoked successfully")
             else:
                 error_data = response.json()
-                print(f"❌ Failed to revoke token: {error_data.get('message', 'Unknown error')}")
+                print(f"[ERROR] Failed to revoke token: {error_data.get('message', 'Unknown error')}")
                 
         except Exception as e:
-            print(f"❌ Error revoking token: {e}")
+            print(f"[ERROR] Error revoking token: {e}")
     
     def _test_authentication(self):
         """Test API authentication with user's token."""
-        print("\n🧪 TEST API AUTHENTICATION:")
+        print("\n[TEST] TEST API AUTHENTICATION:")
         
         token = input("Enter API token to test: ").strip()
         if not token:
-            print("❌ Token required")
+            print("[ERROR] Token required")
             return
         
         try:
@@ -911,20 +911,20 @@ class MenuController:
             response = requests.get(url, headers=headers, timeout=5)
             
             if response.status_code == 200:
-                print("✅ Authentication successful!")
+                print("[OK] Authentication successful!")
                 data = response.json()
                 print(f"   Response: {data}")
             elif response.status_code == 401:
-                print("❌ Authentication failed - invalid or revoked token")
+                print("[ERROR] Authentication failed - invalid or revoked token")
             else:
-                print(f"❌ Unexpected response: {response.status_code}")
+                print(f"[ERROR] Unexpected response: {response.status_code}")
                 
         except Exception as e:
-            print(f"❌ Test failed: {e}")
+            print(f"[ERROR] Test failed: {e}")
     
     def _show_integration_examples(self):
         """Show webhook integration examples."""
-        print("\n📖 WEBHOOK INTEGRATION EXAMPLES:")
+        print("\n[DOCS] WEBHOOK INTEGRATION EXAMPLES:")
         print("=" * 50)
         
         # Get tunnel URL
@@ -936,29 +936,29 @@ class MenuController:
             if status.get('url'):
                 webhook_url = status['url']
         
-        print(f"\n🔗 Your Webhook URL: {webhook_url}/print")
-        print(f"\n1️⃣ **Authorization Header (Recommended)**:")
+        print(f"\n[URL] Your Webhook URL: {webhook_url}/print")
+        print(f"\n1. **Authorization Header (Recommended)**:")
         print(f"   URL: {webhook_url}/print")
         print(f"   Headers: Authorization: Bearer zp_your_token_here")
         print(f"   Body: {{\"labels\": [...]}}")
         
-        print(f"\n2️⃣ **Query Parameter**:")
+        print(f"\n2. **Query Parameter**:")
         print(f"   URL: {webhook_url}/print?token=zp_your_token_here")
         print(f"   Body: {{\"labels\": [...]}}")
         
-        print(f"\n3️⃣ **Request Body**:")
+        print(f"\n3. **Request Body**:")
         print(f"   URL: {webhook_url}/print")
         print(f"   Body: {{\"token\": \"zp_your_token_here\", \"labels\": [...]}}")
         
-        print(f"\n📋 **Odoo Webhook Configuration:**")
-        print(f"   • URL: {webhook_url}/print")
-        print(f"   • Method: POST")
-        print(f"   • Headers: Authorization: Bearer zp_your_token_here")
-        print(f"   • Content-Type: application/json")
+        print(f"\n[INFO] **Odoo Webhook Configuration:**")
+        print(f"   * URL: {webhook_url}/print")
+        print(f"   * Method: POST")
+        print(f"   * Headers: Authorization: Bearer zp_your_token_here")
+        print(f"   * Content-Type: application/json")
     
     def _show_default_token(self):
         """Show the default token from startup logs."""
-        print("\n🔍 DEFAULT TOKEN:")
+        print("\n[SEARCH] DEFAULT TOKEN:")
         
         try:
             import subprocess
@@ -973,14 +973,14 @@ class MenuController:
                 token_line = None
                 
                 for line in reversed(lines):  # Check from newest to oldest
-                    if "🔑 Generated default API token:" in line:
+                    if "[KEY] Generated default API token:" in line:
                         token_line = line
                         break
                 
                 if token_line:
-                    token = token_line.split("🔑 Generated default API token: ")[1].strip()
-                    print(f"🔑 Default Token: {token}")
-                    print(f"\n💡 Use this token for webhook authentication:")
+                    token = token_line.split("[KEY] Generated default API token: ")[1].strip()
+                    print(f"[KEY] Default Token: {token}")
+                    print(f"\n[INFO] Use this token for webhook authentication:")
                     print(f"   Authorization: Bearer {token}")
                     
                     # Show current webhook URL with token
@@ -989,17 +989,17 @@ class MenuController:
                         status = active_tunnel.get_status()
                         if status.get('url'):
                             webhook_url = status['url']
-                            print(f"\n🌐 Ready-to-use Webhook URL:")
+                            print(f"\n[TUNNEL] Ready-to-use Webhook URL:")
                             print(f"   {webhook_url}/print")
                             print(f"   Header: Authorization: Bearer {token}")
                 else:
-                    print("❌ Default token not found in logs")
-                    print("💡 Generate a new token using option 2")
+                    print("[ERROR] Default token not found in logs")
+                    print("[INFO] Generate a new token using option 2")
             else:
-                print("❌ Failed to read container logs")
+                print("[ERROR] Failed to read container logs")
                 
         except Exception as e:
-            print(f"❌ Error retrieving token: {e}")
+            print(f"[ERROR] Error retrieving token: {e}")
     
     def _update_webhook_url_with_token(self, token):
         """Update internal webhook URL tracking with token."""
@@ -1022,25 +1022,25 @@ class MenuController:
                     active_tokens = [t for t in data['tokens'] if t['is_active']]
                     
                     if active_tokens:
-                        print(f"\n💡 Found {len(active_tokens)} active token(s):")
+                        print(f"\n[INFO] Found {len(active_tokens)} active token(s):")
                         for token in active_tokens:
                             print(f"   - {token['name']}")
                         
-                        print("\n🔑 Enter your API token for testing:")
-                        print("   (You can find your tokens in 'A. API Security' → 'Generate New Token')")
+                        print("\n[KEY] Enter your API token for testing:")
+                        print("   (You can find your tokens in 'A. API Security' -> 'Generate New Token')")
                         user_token = input("Token: ").strip()
                         return user_token if user_token else None
                     else:
-                        print("❌ No active tokens found")
-                        print("💡 Generate a token first using 'A. API Security' menu")
+                        print("[ERROR] No active tokens found")
+                        print("[INFO] Generate a token first using 'A. API Security' menu")
                         return None
                 else:
-                    print("❌ Failed to get token info from API")
+                    print("[ERROR] Failed to get token info from API")
                     return None
             else:
-                print("❌ API server not running")
+                print("[ERROR] API server not running")
                 return None
                         
         except Exception as e:
-            print(f"❌ Error getting token info: {e}")
+            print(f"[ERROR] Error getting token info: {e}")
             return None
