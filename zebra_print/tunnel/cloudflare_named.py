@@ -293,8 +293,8 @@ class CloudflareNamedTunnel(TunnelProvider):
             with open(self.pid_file, 'w') as f:
                 f.write(str(process.pid))
             
-            # Wait for tunnel to initialize
-            time.sleep(4)
+            # Wait for tunnel to initialize (reduced for faster startup)
+            time.sleep(2)
             
             # Verify tunnel is running using multiple methods
             if not self._verify_tunnel_health():

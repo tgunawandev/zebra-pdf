@@ -78,7 +78,7 @@ class FlaskAPIService(APIService):
             # Wait for server to start (increased timeout for Windows)
             import platform
             wait_time = 5 if platform.system() == "Windows" else 3
-            time.sleep(wait_time)
+            time.sleep(min(wait_time, 2))  # Cap wait time at 2 seconds
             
             # Verify server is responding
             health_result = self._health_check()
@@ -195,19 +195,19 @@ class FlaskAPIService(APIService):
             check_host = "localhost" if self.host == "0.0.0.0" else self.host
             health_url = f"http://{check_host}:{self.port}/health"
             
-            # Try multiple times with increasing delays
-            for attempt in range(3):
+            # Try multiple times with shorter delays for faster response
+            for attempt in range(2):  # Reduced from 3 to 2 attempts
                 try:
-                    response = requests.get(health_url, timeout=5)
+                    response = requests.get(health_url, timeout=2)
                     if response.status_code == 200:
                         return True
                 except requests.exceptions.ConnectionError:
-                    if attempt < 2:  # Not the last attempt
-                        time.sleep(1)
+                    if attempt < 1:  # Only retry once
+                        time.sleep(0.3)  # Shorter delay
                         continue
                 except requests.exceptions.Timeout:
-                    if attempt < 2:  # Not the last attempt
-                        time.sleep(1)
+                    if attempt < 1:  # Only retry once
+                        time.sleep(0.3)  # Shorter delay
                         continue
                     
             return False

@@ -84,8 +84,8 @@ class NgrokTunnel(TunnelProvider):
             with open(self.pid_file, 'w') as f:
                 f.write(str(process.pid))
             
-            # Wait for ngrok to establish connection
-            time.sleep(3)
+            # Wait for ngrok to establish connection (reduced for faster startup)
+            time.sleep(2)
             
             # Get tunnel URL from API
             tunnel_url = self._get_tunnel_url_from_api()

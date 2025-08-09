@@ -448,7 +448,7 @@ class MenuController:
         # Check if API is already running (supervisor mode)
         try:
             import requests
-            response = requests.get("http://localhost:5000/health", timeout=5)
+            response = requests.get("http://localhost:5000/health", timeout=2)
             if response.status_code == 200:
                 print("[OK] API server already running (managed by supervisor)")
                 print("[INFO] In Docker mode, API runs automatically via supervisor")
@@ -758,7 +758,7 @@ class MenuController:
             # Get token information
             info_url = f"http://{api_status['host']}:{api_status['port']}/auth/info"
             
-            response = requests.get(info_url, timeout=5)
+            response = requests.get(info_url, timeout=2)
             if response.status_code == 200:
                 data = response.json()
                 self._display_tokens(data['tokens'])
@@ -828,7 +828,7 @@ class MenuController:
             if description:
                 payload["description"] = description
             
-            response = requests.post(url, json=payload, timeout=5)
+            response = requests.post(url, json=payload, timeout=3)
             
             if response.status_code == 200:
                 data = response.json()
@@ -886,7 +886,7 @@ class MenuController:
             token = input("Enter valid API token for authentication: ").strip()
             headers = {"Authorization": f"Bearer {token}"}
             
-            response = requests.delete(url, headers=headers, timeout=5)
+            response = requests.delete(url, headers=headers, timeout=2)
             
             if response.status_code == 200:
                 print(f"[OK] Token '{name}' revoked successfully")
@@ -914,7 +914,7 @@ class MenuController:
             url = f"http://{api_status['host']}:{api_status['port']}/printer/status"
             headers = {"Authorization": f"Bearer {token}"}
             
-            response = requests.get(url, headers=headers, timeout=5)
+            response = requests.get(url, headers=headers, timeout=2)
             
             if response.status_code == 200:
                 print("[OK] Authentication successful!")
@@ -1021,7 +1021,7 @@ class MenuController:
             
             if api_status['running']:
                 info_url = f"http://{api_status['host']}:{api_status['port']}/auth/info"
-                response = requests.get(info_url, timeout=5)
+                response = requests.get(info_url, timeout=2)
                 
                 if response.status_code == 200:
                     data = response.json()
