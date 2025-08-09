@@ -38,26 +38,69 @@ PRINTER_NAME = "ZDesigner ZD230-203dpi ZPL"
 def json_to_zpl(label_data):
     """
     Convert JSON label data directly to ZPL commands.
-    Using simple format that matches working direct test.
+    No PDF processing needed!
+    
+    Expected JSON format:
+    {
+        "labels": [
+            {
+                "qr_code": "01010101160",
+                "do_number": "W-CPN/OUT/00002", 
+                "route": "Route A",
+                "date": "12/04/22",
+                "customer": "Customer Name",
+                "so_number": "SO-67890",
+                "mo_number": "MO-12345",
+                "item": "Product Name",
+                "qty": "100",
+                "uom": "PCS"
+            }
+        ]
+    }
     """
     logging.info(f"[PROCESS] Converting {len(label_data['labels'])} labels to ZPL")
     
     zpl_commands = []
     
-    # Generate ZPL for each label using SIMPLE format like direct test
+    # Printer initialization (once at the beginning)
+    zpl_commands.extend([
+        "^XA",
+        "^JUS",      # Auto-detect label length
+        "^MMT",      # Set media type to thermal transfer
+        "^MNY",      # Set continuous media
+        "^MTT",      # Set media type to thermal transfer
+        "^PON",      # Print orientation normal
+        "^PMN",      # Print mode normal
+        "^LRN",      # Label reverse normal
+        "^CI0",      # Change international font/encoding
+        "^XZ",
+        ""           # Blank line separator
+    ])
+    
+    # Generate ZPL for each label
     for i, label in enumerate(label_data['labels']):
         zpl_commands.extend([
             "^XA",           # Start format
-            "^PR2",          # Print speed
-            "^MD5",          # Media darkness 
-            "^JMA",          # Media type auto
-            "^LH0,0",        # Label home position
             
-            # Simple text layout (no QR code for now to test)
-            f"^FO50,50^A0,16,16^FD{label.get('do_number', 'TEST-LABEL')}^FS",
-            f"^FO50,80^A0,16,16^FD{label.get('customer', 'API Test')}^FS", 
-            f"^FO50,110^A0,16,16^FD{label.get('date', '09/08/25')}^FS",
-            f"^FO50,140^A0,16,16^FDQty: {label.get('qty', '1')} {label.get('uom', 'PCS')}^FS",
+            # CALIBRATION AND POSITIONING COMMANDS
+            "^LL236",        # Set label length to 236 dots (30mm)
+            "^PW394",        # Set print width to 394 dots (50mm) 
+            "^LH0,0",        # Set label home position (top-left)
+            "^LT8",          # Set label top margin to 8 dots (reduced from 20)
+            "^PR2",          # Set print speed to 2 inches/second (slower for accuracy)
+            "^MD5",          # Set media darkness to 5 (medium)
+            "^JMA",          # Set media type to auto-detect
+            
+            # QR code only (no text) - repositioned to (25,40)
+            f"^FO25,40^BQN,2,5^FDLA,{label['qr_code']}^FS",
+            
+            # TEXT FIELDS WITH NEW LAYOUT - 18x18 SIZE (9 fields, no qr_code text)
+            f"^FO180,50^A0N,18,18^FD{label['do_number']}^FS",      # DO Number
+            f"^FO180,75^A0N,18,18^FD{label['route']} {label['date']}^FS",        # Route + Date
+            f"^FO180,100^A0N,18,18^FD{label['customer']}^FS",      # Customer
+            f"^FO180,125^A0N,18,18^FD{label['so_number']} {label['mo_number']}^FS",  # SO + MO Number
+            f"^FO180,150^A0N,18,18^FD{label['item']}^FS",          # Item
+            f"^FO180,175^A0N,18,18^FD{label['qty']} {label['uom']}^FS",  # Qty + UOM
             
             "^XZ"            # End format
         ])
@@ -67,7 +110,7 @@ def json_to_zpl(label_data):
             zpl_commands.append("")
     
     zpl_string = "\n".join(zpl_commands)
-    logging.info(f"[OK] Generated simple ZPL with {len(label_data['labels'])} labels")
+    logging.info(f"[OK] Generated ZPL with {len(label_data['labels'])} labels")
     return zpl_string
 
 def print_to_zebra(zpl_commands):
