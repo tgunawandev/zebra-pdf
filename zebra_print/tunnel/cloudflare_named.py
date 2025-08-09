@@ -115,7 +115,10 @@ class CloudflareNamedTunnel(TunnelProvider):
                     return False, f"Failed to create tunnel: {create_result.stderr}"
             
             # Create config file with custom domain
-            self._create_named_tunnel_config()
+            try:
+                self._create_named_tunnel_config()
+            except Exception as config_error:
+                return False, f"Failed to create tunnel config: {config_error}. Try running 'cloudflared tunnel create {self.tunnel_name}' manually."
             
             # Create DNS record
             if platform.system() == "Windows":
@@ -226,7 +229,25 @@ class CloudflareNamedTunnel(TunnelProvider):
                     break
         
         if not credentials_file:
-            raise Exception("No tunnel credentials found. Run 'cloudflared tunnel login' first.")
+            # Final attempt: list all .json files in config directory for debugging
+            json_files = []
+            try:
+                if os.path.exists(self.config_dir):
+                    for f in os.listdir(self.config_dir):
+                        if f.endswith('.json'):
+                            json_files.append(f)
+            except:
+                pass
+            
+            error_msg = f"No tunnel credentials found for '{self.tunnel_name}'.\n"
+            error_msg += f"Checked directory: {self.config_dir}\n"
+            if json_files:
+                error_msg += f"Found credential files: {json_files}\n"
+                error_msg += "Try running: cloudflared tunnel delete zebra-printer && cloudflared tunnel create zebra-printer"
+            else:
+                error_msg += "No credential files found. Run 'cloudflared tunnel login' and 'cloudflared tunnel create zebra-printer'"
+            
+            raise Exception(error_msg)
         
         print(f"[OK] Using credentials: {credentials_file}")
         
