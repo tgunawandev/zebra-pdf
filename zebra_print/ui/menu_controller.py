@@ -114,6 +114,7 @@ class MenuController:
         print("3. [TEST] Test Connection")
         print("4. [DOCUMENT] Print Test Label")
         print("5. [INPUT] List All Printers")
+        print("6. [DEBUG] Debug Printer Setup")
         print("0. [BACK]  Back to Main Menu")
     
     def display_test_menu(self):
@@ -145,6 +146,8 @@ class MenuController:
                 self._print_test_label()
             elif choice == "5":
                 self._list_all_printers()
+            elif choice == "6":
+                self._debug_printer_setup()
             else:
                 print("[ERROR] Invalid option")
             
@@ -1191,3 +1194,90 @@ class MenuController:
             
         except Exception as e:
             print(f"[ERROR] Diagnostics failed: {e}")
+    
+    def _debug_printer_setup(self):
+        """Debug printer setup and configuration."""
+        print("\n[DEBUG] PRINTER SETUP DEBUGGING:")
+        print("Analyzing printer configuration...")
+        
+        try:
+            import platform
+            if platform.system() != "Windows":
+                print("[INFO] This debug is designed for Windows")
+                return
+            
+            # Test 1: Get detailed printer information
+            print("\n[TEST 1] Printer Information...")
+            try:
+                import subprocess
+                cmd = [
+                    "powershell", "-Command",
+                    "Get-Printer | Select-Object Name, PrinterStatus, PortName, DriverName | Format-Table -AutoSize"
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                if result.returncode == 0:
+                    print("Available Printers:")
+                    print(result.stdout)
+                else:
+                    print(f"[ERROR] Could not get printer info: {result.stderr}")
+            except Exception as e:
+                print(f"[ERROR] Printer info failed: {e}")
+            
+            # Test 2: Check current printer name
+            current_printer = self.system_status.printer_service._printer_name
+            print(f"\n[TEST 2] Current Configured Printer: '{current_printer}'")
+            
+            # Test 3: Test printer existence
+            print(f"\n[TEST 3] Testing printer existence...")
+            status = self.system_status.printer_service.get_status()
+            print(f"Printer exists: {status['exists']}")
+            print(f"Printer enabled: {status['enabled']}")
+            print(f"Printer state: {status['state']}")
+            print(f"Connection type: {status['connection']}")
+            
+            # Test 4: Try simple ZPL test
+            print(f"\n[TEST 4] Testing ZPL printing methods...")
+            simple_zpl = "^XA^FO50,50^A0,50,50^FDTEST^FS^XZ"
+            
+            # Test the actual print method
+            success, message = self.system_status.printer_service.print_zpl(simple_zpl)
+            print(f"Print test result: {success}")
+            print(f"Print message: {message}")
+            
+            # Test 5: Check available printer ports
+            print(f"\n[TEST 5] Checking printer ports...")
+            try:
+                cmd = [
+                    "powershell", "-Command",
+                    f"Get-Printer -Name '{current_printer}' | Select-Object Name, PortName, ShareName | Format-List"
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                if result.returncode == 0:
+                    print("Printer Details:")
+                    print(result.stdout)
+                else:
+                    print(f"[WARNING] Could not get detailed printer info")
+            except Exception as e:
+                print(f"[ERROR] Port check failed: {e}")
+            
+            # Recommendations
+            print(f"\n[RECOMMENDATIONS]")
+            if not status['exists']:
+                print("❌ Printer not found:")
+                print(f"   - Check if '{current_printer}' is the correct printer name")
+                print("   - Try option '5. List All Printers' to see available printers")
+                print("   - You may need to update the printer name in settings")
+            elif status['connection'] == 'USB':
+                print("⚠️  USB Printer detected:")
+                print("   - USB printers may need special ZPL driver setup")
+                print("   - Try installing Zebra driver in 'ZPL' or 'Raw' mode")
+                print("   - Check if printer supports direct ZPL printing")
+            else:
+                print("ℹ️  Printer setup appears correct")
+                print("   - If printing still fails, try different ZPL commands")
+                print("   - Check printer queue for stuck jobs")
+                
+        except Exception as e:
+            print(f"[ERROR] Debug failed: {e}")

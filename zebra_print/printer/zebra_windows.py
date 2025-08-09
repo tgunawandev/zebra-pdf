@@ -247,14 +247,16 @@ class ZebraWindowsPrinter(PrinterService):
                 temp_file_path = temp_file.name
             
             try:
-                # Send to printer using copy command (raw printing)
+                # Method 1: Try copy command (raw printing)
                 cmd = f'copy "{temp_file_path}" "\\\\localhost\\{self._printer_name}"'
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
                 
                 if result.returncode == 0:
-                    return True, "ZPL sent to printer successfully"
+                    return True, "ZPL sent to printer successfully via copy command"
                 else:
-                    return False, f"Failed to send ZPL to printer: {result.stderr}"
+                    # Method 2: Try direct printer port (if copy fails)
+                    return self._try_direct_printer_port(zpl_content, temp_file_path)
+                    
             finally:
                 # Clean up temporary file
                 try:
@@ -264,3 +266,66 @@ class ZebraWindowsPrinter(PrinterService):
                     
         except Exception as e:
             return False, f"Print error: {str(e)}"
+    
+    def _try_direct_printer_port(self, zpl_content: str, temp_file_path: str) -> Tuple[bool, str]:
+        """Try alternative printing methods when copy command fails."""
+        try:
+            # Method 2a: Try using print command instead of copy
+            print_cmd = f'print "{temp_file_path}"'
+            result = subprocess.run(print_cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if result.returncode == 0:
+                return True, "ZPL sent to printer successfully via print command"
+            
+            # Method 2b: Try PowerShell Out-Printer
+            ps_cmd = [
+                "powershell", "-Command",
+                f"Get-Content '{temp_file_path}' | Out-Printer -Name '{self._printer_name}'"
+            ]
+            ps_result = subprocess.run(ps_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if ps_result.returncode == 0:
+                return True, "ZPL sent to printer successfully via PowerShell"
+            
+            # Method 2c: Try writing directly to printer port (if we can find it)
+            return self._try_printer_port_write(zpl_content)
+            
+        except Exception as e:
+            return False, f"Alternative printing methods failed: {str(e)}"
+    
+    def _try_printer_port_write(self, zpl_content: str) -> Tuple[bool, str]:
+        """Try writing directly to printer port."""
+        try:
+            # Get printer port information
+            cmd = [
+                "powershell", "-Command",
+                f"Get-Printer -Name '{self._printer_name}' | Select-Object PortName"
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            if result.returncode == 0 and "USB" in result.stdout:
+                # For USB printers, we can't write directly to port easily
+                return False, f"USB printer detected - copy command failed, may need different driver setup"
+            elif result.returncode == 0:
+                # Try to extract port name and write directly
+                import re
+                port_match = re.search(r'PortName\s*:\s*(\S+)', result.stdout)
+                if port_match:
+                    port_name = port_match.group(1)
+                    if port_name.startswith("FILE:") or port_name.startswith("USB"):
+                        return False, f"Printer on {port_name} - cannot write directly"
+                    else:
+                        # Try writing to network port
+                        try:
+                            with open(f"\\\\localhost\\{port_name}", "wb") as port:
+                                port.write(zpl_content.encode('utf-8'))
+                            return True, f"ZPL sent directly to printer port {port_name}"
+                        except:
+                            return False, f"Failed to write to printer port {port_name}"
+                else:
+                    return False, "Could not determine printer port"
+            else:
+                return False, f"Could not get printer port information: {result.stderr}"
+                
+        except Exception as e:
+            return False, f"Direct port write failed: {str(e)}"
