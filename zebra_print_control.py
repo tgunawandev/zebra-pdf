@@ -95,15 +95,36 @@ class ZebraLabelControl:
             return True, "API server is already running"
         
         try:
-            process = subprocess.Popen(
-                [sys.executable, 'label_print_api.py'],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True
-            )
+            # Get the directory where this script is located
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            api_script = os.path.join(script_dir, 'label_print_api.py')
+            
+            # Check if the API script exists
+            if not os.path.exists(api_script):
+                return False, f"API script not found: {api_script}"
+            
+            # Cross-platform process creation
+            import platform
+            if platform.system() == "Windows":
+                # Windows doesn't support start_new_session the same way
+                process = subprocess.Popen(
+                    [sys.executable, api_script],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                )
+            else:
+                # Unix/Linux
+                process = subprocess.Popen(
+                    [sys.executable, api_script],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
             
             # Save PID for management
-            with open('.server.pid', 'w') as f:
+            pid_file = os.path.join(script_dir, '.server.pid')
+            with open(pid_file, 'w') as f:
                 f.write(str(process.pid))
             
             # Wait and verify
@@ -118,11 +139,57 @@ class ZebraLabelControl:
     def stop_api_server(self):
         """Stop API server."""
         try:
-            success, _, _ = self.run_command('pkill -f label_print_api.py', timeout=5)
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            pid_file = os.path.join(script_dir, '.server.pid')
             
-            # Clean up PID file
-            if os.path.exists('.server.pid'):
-                os.remove('.server.pid')
+            # Try to stop using PID file first
+            if os.path.exists(pid_file):
+                try:
+                    with open(pid_file, 'r') as f:
+                        pid = int(f.read().strip())
+                    
+                    import platform
+                    if platform.system() == "Windows":
+                        # Windows process termination
+                        try:
+                            import psutil
+                            process = psutil.Process(pid)
+                            process.terminate()
+                            time.sleep(1)
+                            if process.is_running():
+                                process.kill()
+                        except ImportError:
+                            # Fallback if psutil not available
+                            subprocess.run(['taskkill', '/pid', str(pid), '/f'], check=False)
+                        except Exception:
+                            # Final fallback
+                            subprocess.run(['taskkill', '/pid', str(pid), '/f'], check=False)
+                    else:
+                        # Unix/Linux process termination
+                        try:
+                            os.kill(pid, 15)  # SIGTERM
+                            time.sleep(1)
+                            os.kill(pid, 9)   # SIGKILL
+                        except ProcessLookupError:
+                            pass  # Process already dead
+                        except Exception:
+                            # Fallback to pkill
+                            success, _, _ = self.run_command('pkill -f label_print_api.py', timeout=5)
+                    
+                    # Remove PID file
+                    os.remove(pid_file)
+                    
+                except Exception:
+                    pass
+            
+            # Fallback: try system-specific process killing
+            import platform
+            if platform.system() == "Windows":
+                # Use tasklist and taskkill
+                self.run_command('taskkill /f /im python.exe /fi "WINDOWTITLE eq *label_print_api*"', timeout=5)
+            else:
+                # Use pkill for Unix/Linux
+                self.run_command('pkill -f label_print_api.py', timeout=5)
             
             return True, "API server stopped"
         except Exception as e:

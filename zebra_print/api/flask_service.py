@@ -8,6 +8,7 @@ import signal
 import subprocess
 import time
 import requests
+import tempfile
 from typing import Dict, Tuple
 from zebra_print.api.base import APIService
 
@@ -17,8 +18,16 @@ class FlaskAPIService(APIService):
     def __init__(self, port: int = 5000, host: str = "0.0.0.0"):
         self.port = port
         self.host = host
-        self.pid_file = f"/tmp/flask_api_{port}.pid"
-        self.script_path = "/home/tgunawan/project/01-web/zebra-pdf/label_print_api.py"
+        
+        # Use cross-platform temp directory
+        temp_dir = tempfile.gettempdir()
+        self.pid_file = os.path.join(temp_dir, f"flask_api_{port}.pid")
+        
+        # Set script path dynamically
+        current_file = os.path.abspath(__file__)
+        # From zebra_print/api/flask_service.py go up 3 levels to project root
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+        self.script_path = os.path.join(project_root, "label_print_api.py")
     
     def is_running(self) -> bool:
         """Check if API service is running (PID file or HTTP response)."""
@@ -90,18 +99,45 @@ class FlaskAPIService(APIService):
             with open(self.pid_file, 'r') as f:
                 pid = int(f.read().strip())
             
-            # Kill process group
-            os.killpg(os.getpgid(pid), signal.SIGTERM)
-            time.sleep(2)
-            
-            # Force kill if still running
-            try:
-                os.killpg(os.getpgid(pid), signal.SIGKILL)
-            except:
-                pass
+            # Cross-platform process termination
+            import platform
+            if platform.system() == "Windows":
+                # Windows process termination
+                try:
+                    import psutil
+                    process = psutil.Process(pid)
+                    process.terminate()
+                    time.sleep(2)
+                    if process.is_running():
+                        process.kill()
+                except ImportError:
+                    # Fallback if psutil not available
+                    subprocess.run(['taskkill', '/pid', str(pid), '/f'], check=False)
+                except Exception:
+                    # Final fallback
+                    subprocess.run(['taskkill', '/pid', str(pid), '/f'], check=False)
+            else:
+                # Unix/Linux process termination
+                try:
+                    os.killpg(os.getpgid(pid), signal.SIGTERM)
+                    time.sleep(2)
+                    # Force kill if still running
+                    try:
+                        os.killpg(os.getpgid(pid), signal.SIGKILL)
+                    except:
+                        pass
+                except:
+                    # Fallback to simple kill
+                    try:
+                        os.kill(pid, signal.SIGTERM)
+                        time.sleep(2)
+                        os.kill(pid, signal.SIGKILL)
+                    except:
+                        pass
             
             # Remove PID file
-            os.remove(self.pid_file)
+            if os.path.exists(self.pid_file):
+                os.remove(self.pid_file)
             
             return True, "API server stopped"
             
