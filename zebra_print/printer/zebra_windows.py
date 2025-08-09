@@ -261,22 +261,22 @@ class ZebraWindowsPrinter(PrinterService):
                 temp_file_path = temp_file.name
             
             try:
-                # First check if this is a USB printer
+                # Always try copy command first (like the working direct test)
+                cmd = f'copy "{temp_file_path}" "\\\\localhost\\{self._printer_name}"'
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                if result.returncode == 0:
+                    return True, "ZPL sent to printer successfully via copy command"
+                
+                # If copy fails, check if this is a USB printer and try USB methods
                 is_usb_printer = self._is_usb_printer()
                 
                 if is_usb_printer:
-                    # For USB printers, skip copy command and use Windows print methods
+                    # For USB printers, try Windows print methods
                     return self._try_usb_printer_methods(zpl_content, temp_file_path)
                 else:
-                    # Method 1: Try copy command for network printers
-                    cmd = f'copy "{temp_file_path}" "\\\\localhost\\{self._printer_name}"'
-                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
-                    
-                    if result.returncode == 0:
-                        return True, "ZPL sent to printer successfully via copy command"
-                    else:
-                        # Fallback to other methods
-                        return self._try_direct_printer_port(zpl_content, temp_file_path)
+                    # For network printers, try other methods
+                    return self._try_direct_printer_port(zpl_content, temp_file_path)
                     
             finally:
                 # Clean up temporary file
@@ -312,7 +312,30 @@ class ZebraWindowsPrinter(PrinterService):
             result = subprocess.run(print_cmd, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             
             if result.returncode == 0:
-                return True, "ZPL sent to USB printer successfully via print command"
+                # Wait and verify the job was actually processed
+                import time
+                time.sleep(1)  # Give printer time to process
+                
+                # Check if there are any print jobs still queued
+                queue_cmd = [
+                    "powershell", "-Command",
+                    f"Get-PrintJob -PrinterName '{self._printer_name}' | Measure-Object | Select-Object Count"
+                ]
+                queue_result = subprocess.run(queue_cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                if queue_result.returncode == 0:
+                    try:
+                        count_match = re.search(r'Count\s*:\s*(\d+)', queue_result.stdout)
+                        if count_match:
+                            job_count = int(count_match.group(1))
+                            if job_count == 0:
+                                return True, "ZPL sent to USB printer successfully via print command and job completed"
+                            else:
+                                return False, f"Print job sent but {job_count} jobs still queued - may have failed"
+                    except:
+                        pass
+                
+                return True, "ZPL sent to USB printer successfully via print command (job verification failed)"
         except Exception as e:
             pass
         
