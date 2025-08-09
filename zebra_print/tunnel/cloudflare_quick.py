@@ -67,8 +67,13 @@ class CloudflareQuickTunnel(TunnelProvider):
             cmd = ['cloudflared', 'tunnel', '--url', f'http://localhost:{self.local_port}']
             
             # Start process and capture output
+            import platform
             with open(self.log_file, 'w') as log:
-                process = subprocess.Popen(cmd, stdout=log, stderr=log, preexec_fn=os.setsid)
+                if platform.system() == "Windows":
+                    process = subprocess.Popen(cmd, stdout=log, stderr=log, 
+                                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                else:
+                    process = subprocess.Popen(cmd, stdout=log, stderr=log, preexec_fn=os.setsid)
             
             # Save PID
             with open(self.pid_file, 'w') as f:

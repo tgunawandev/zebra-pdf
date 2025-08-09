@@ -210,13 +210,31 @@ class CloudflareNamedTunnel(TunnelProvider):
                 self.custom_domain = stored_config.domain_mapping
             
             # Start tunnel with config file using robust background execution
-            cmd = ['nohup', 'cloudflared', 'tunnel', '--config', self.config_file, 'run', self.tunnel_name]
+            import platform
+            import tempfile
+            
+            if platform.system() == "Windows":
+                # Windows doesn't have nohup, but subprocess handles background execution
+                cmd = ['cloudflared', 'tunnel', '--config', self.config_file, 'run', self.tunnel_name]
+            else:
+                cmd = ['nohup', 'cloudflared', 'tunnel', '--config', self.config_file, 'run', self.tunnel_name]
             
             # Start process in background with proper log handling
-            log_file = f'/tmp/cloudflared_{self.tunnel_name}.log'
+            
+            if platform.system() == "Windows":
+                log_file = os.path.join(tempfile.gettempdir(), f'cloudflared_{self.tunnel_name}.log')
+                cwd = None
+            else:
+                log_file = f'/tmp/cloudflared_{self.tunnel_name}.log'
+                cwd = '/'
+            
             with open(log_file, 'w') as f:
-                process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, 
-                                         preexec_fn=os.setsid, cwd='/')
+                if platform.system() == "Windows":
+                    process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, 
+                                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                else:
+                    process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, 
+                                             preexec_fn=os.setsid, cwd=cwd)
             
             # Save PID
             with open(self.pid_file, 'w') as f:

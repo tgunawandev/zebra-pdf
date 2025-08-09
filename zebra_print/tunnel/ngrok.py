@@ -59,8 +59,14 @@ class NgrokTunnel(TunnelProvider):
             
             # Start ngrok in background
             cmd = ['ngrok', 'http', str(self.local_port), '--region', self.region, '--log', 'stdout']
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
-                                     stderr=subprocess.PIPE, preexec_fn=os.setsid)
+            import platform
+            if platform.system() == "Windows":
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                         stderr=subprocess.PIPE, 
+                                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            else:
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                         stderr=subprocess.PIPE, preexec_fn=os.setsid)
             
             # Save PID
             with open(self.pid_file, 'w') as f:

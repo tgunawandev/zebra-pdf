@@ -85,9 +85,16 @@ class CloudflareTunnel(TunnelProvider):
             # This is like ngrok but uses Cloudflare infrastructure
             cmd = ['cloudflared', 'tunnel', '--url', f'http://localhost:{self.local_port}']
             
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
-                                     stderr=subprocess.STDOUT, preexec_fn=os.setsid, 
-                                     text=True, bufsize=1, universal_newlines=True)
+            import platform
+            if platform.system() == "Windows":
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                         stderr=subprocess.STDOUT, 
+                                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                                         text=True, bufsize=1, universal_newlines=True)
+            else:
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                         stderr=subprocess.STDOUT, preexec_fn=os.setsid, 
+                                         text=True, bufsize=1, universal_newlines=True)
             
             # Save PID
             with open(self.pid_file, 'w') as f:

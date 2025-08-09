@@ -58,9 +58,18 @@ class FlaskAPIService(APIService):
                 return False, f"API script not found: {self.script_path}"
             
             # Start Flask server in background
-            cmd = ['python3', self.script_path]
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
-                                     stderr=subprocess.PIPE, preexec_fn=os.setsid)
+            import platform
+            if platform.system() == "Windows":
+                # Use python instead of python3 on Windows
+                cmd = ['python', self.script_path]
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                         stderr=subprocess.PIPE, 
+                                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            else:
+                # Unix/Linux
+                cmd = ['python3', self.script_path]
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                         stderr=subprocess.PIPE, preexec_fn=os.setsid)
             
             # Save PID
             with open(self.pid_file, 'w') as f:
