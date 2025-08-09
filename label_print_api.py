@@ -114,31 +114,26 @@ def json_to_zpl(label_data):
     return zpl_string
 
 def print_to_zebra(zpl_commands):
-    """Send ZPL commands to Zebra printer."""
+    """Send ZPL commands to Zebra printer using cross-platform approach."""
     try:
-        logging.info(f"[PRINTER]️  Sending ZPL to {PRINTER_NAME}")
+        logging.info(f"[PRINTER] Sending ZPL to {PRINTER_NAME}")
         
-        process = subprocess.Popen(
-            ['lp', '-d', PRINTER_NAME, '-o', 'raw'],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        # Import and use the cross-platform printer system
+        from zebra_print.printer import get_zebra_printer
         
-        stdout, stderr = process.communicate(input=zpl_commands.encode('utf-8'), timeout=30)
+        printer_service = get_zebra_printer(PRINTER_NAME)
+        success, message = printer_service.print_zpl(zpl_commands)
         
-        if process.returncode == 0:
-            job_info = stdout.decode().strip()
-            logging.info(f"[OK] ZPL printed successfully: {job_info}")
-            return True, job_info
+        if success:
+            logging.info(f"[OK] ZPL printed successfully: {message}")
+            return True, message
         else:
-            error_msg = stderr.decode()
-            logging.error(f"[ERROR] ZPL printing failed: {error_msg}")
-            return False, error_msg
+            logging.error(f"[ERROR] ZPL printing failed: {message}")
+            return False, message
             
     except Exception as e:
-        logging.error(f"[ERROR] ZPL printing error: {e}")
-        return False, str(e)
+        logging.error(f"[ERROR] Print error: {e}")
+        return False, f"Print system error: {e}"
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -235,29 +230,50 @@ def print_labels():
 @app.route('/printer/status', methods=['GET'])
 @auth_middleware.require_auth
 def printer_status():
-    """Check printer status."""
+    """Check printer status using cross-platform approach."""
     try:
-        result = subprocess.run(['lpstat', '-p', PRINTER_NAME], 
-                              capture_output=True, text=True, timeout=10)
+        from zebra_print.printer import get_zebra_printer
         
-        if result.returncode == 0:
-            return jsonify({
-                "printer": PRINTER_NAME,
-                "status": "available",
-                "details": result.stdout.strip()
-            })
+        printer_service = get_zebra_printer(PRINTER_NAME)
+        status = printer_service.get_status()
+        
+        # Map status to API response format
+        if status.get('exists') and status.get('enabled'):
+            api_status = "available"
+            http_code = 200
+        elif status.get('exists') and not status.get('enabled'):
+            api_status = "disabled"
+            http_code = 200
+        elif not status.get('exists'):
+            api_status = "not_found"
+            http_code = 404
         else:
-            return jsonify({
-                "printer": PRINTER_NAME,
-                "status": "error",
-                "details": result.stderr.strip()
-            }), 500
+            api_status = "error"
+            http_code = 500
+            
+        response_data = {
+            "printer": PRINTER_NAME,
+            "status": api_status,
+            "details": {
+                "exists": status.get('exists', False),
+                "enabled": status.get('enabled', False),
+                "accepting_jobs": status.get('accepting_jobs', False),
+                "state": status.get('state', 'unknown'),
+                "connection": status.get('connection', 'unknown'),
+                "jobs_queued": status.get('jobs_queued', 0)
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return jsonify(response_data), http_code
             
     except Exception as e:
+        logging.error(f"[ERROR] Printer status check failed: {e}")
         return jsonify({
             "printer": PRINTER_NAME,
             "status": "error", 
-            "details": str(e)
+            "details": str(e),
+            "timestamp": datetime.now().isoformat()
         }), 500
 
 @app.route('/auth/token', methods=['POST'])
