@@ -79,6 +79,11 @@ class TokenManager:
         if not token or not token.startswith('zp_'):
             return False, None
         
+        # Check system token from environment first
+        system_token = os.getenv('ZEBRA_API_TOKEN')
+        if system_token and token == system_token:
+            return True, "system"
+        
         token_hash = self._hash_token(token)
         
         for name, token_data in self.tokens.items():
