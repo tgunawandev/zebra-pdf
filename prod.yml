@@ -1,10 +1,6 @@
-
-
 services:
   zebra-print:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: kodemeio/zebra-pdf:latest
     container_name: zebra-print-control
     restart: unless-stopped
     
@@ -14,15 +10,12 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     
-    # Network ports (using host networking, so no port mapping needed)
-    
     # Volumes for persistence and device access
     volumes:
       - zebra_data:/app/data
       - zebra_logs:/var/log/zebra-print
       - /dev:/dev  # Full device access (not read-only)
       - /run/udev:/run/udev:ro  # udev access for device detection
-      - ./:/workspace:ro  # Mount source for development access
     
     # Environment variables - loaded from .env file
     env_file: .env
@@ -49,6 +42,7 @@ services:
     labels:
       - "project=zebra-print"
       - "service=api"
+      - "environment=production"
 
 volumes:
   zebra_data:

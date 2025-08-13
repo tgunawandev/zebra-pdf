@@ -1,39 +1,19 @@
-FROM ubuntu:22.04
-
-# Prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
+FROM alpine:3.18
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    cups \
-    cups-client \
-    cups-bsd \
-    curl \
-    wget \
-    usbutils \
-    lsb-release \
-    gnupg2 \
-    software-properties-common \
+RUN apk add --no-cache \
+    python3 py3-pip \
+    cups cups-client cups-filters \
+    curl bash usbutils \
     supervisor \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/cache/apk/*
 
-# Install Cloudflare tunnel (optional - skip if network issues)
-RUN curl -L --output cloudflared.deb \
-    https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb \
-    && dpkg -i cloudflared.deb \
-    && rm cloudflared.deb \
+# Install Cloudflare tunnel (cloudflared)
+RUN wget -O cloudflared \
+    https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+    && chmod +x cloudflared \
+    && mv cloudflared /usr/local/bin/ \
     || echo "Warning: Could not install cloudflared - tunnel features will be limited"
-
-# Install ngrok (optional - skip if network issues)
-RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-    && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list \
-    && apt update && apt install ngrok \
-    && rm -rf /var/lib/apt/lists/* \
-    || echo "Warning: Could not install ngrok - tunnel features will be limited"
 
 # Create app directory
 WORKDIR /app
@@ -45,25 +25,26 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /var/log/zebra-print \
-    && mkdir -p /app/data \
-    && chmod +x zebra_control_v2.py
+# Create necessary directories and log file
+RUN mkdir -p /var/log/zebra-print /app/data /var/log/supervisor && \
+    touch /app/print_api.log && \
+    chmod 666 /app/print_api.log
 
 # Configure CUPS for printer access
-RUN usermod -a -G lpadmin root \
-    && systemctl enable cups
+RUN adduser root lpadmin && \
+    sed -i 's/^Listen localhost:631/Listen 0.0.0.0:631/' /etc/cups/cupsd.conf && \
+    sed -i 's/<Location \/>/<Location \/>\n  Allow all/' /etc/cups/cupsd.conf
 
-# Create supervisor configuration for services
-RUN mkdir -p /etc/supervisor/conf.d
-COPY docker/supervisor.conf /etc/supervisor/conf.d/zebra-print.conf
+# Copy Alpine-specific supervisor configuration
+COPY docker/supervisor-alpine.conf /etc/supervisor/conf.d/zebra-print.conf
 
-# Create printer detection script
+# Create printer detection and setup scripts
 COPY docker/detect-printer.sh /usr/local/bin/detect-printer.sh
-RUN chmod +x /usr/local/bin/detect-printer.sh
+COPY docker/auto-printer-setup.sh /app/docker/auto-printer-setup.sh
+RUN chmod +x /usr/local/bin/detect-printer.sh /app/docker/auto-printer-setup.sh
 
-# Create entrypoint script
-COPY docker/entrypoint.sh /entrypoint.sh
+# Create Alpine-specific entrypoint script
+COPY docker/entrypoint-alpine.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Expose ports
@@ -79,6 +60,6 @@ ENV ZEBRA_DB_PATH=/app/data/zebra_print.db
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:5000/health || exit 1
 
-# Use custom entrypoint
+# Use Alpine entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf", "-n"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/zebra-print.conf", "-n"]
