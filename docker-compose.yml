@@ -1,4 +1,5 @@
 
+
 services:
   zebra-print:
     build: 
@@ -7,29 +8,34 @@ services:
     container_name: zebra-print-control
     restart: unless-stopped
     
-    # USB printer access
+    # USB printer access - full device access
     privileged: true
+    network_mode: host  # Use host networking for better USB access
     devices:
       - /dev/bus/usb:/dev/bus/usb
     
-    # Network ports
-    ports:
-      - "5000:5000"  # API server
-      - "8631:631"   # CUPS web interface (avoiding host conflict)
+    # Network ports (using host networking, so no port mapping needed)
     
-    # Volumes for persistence
+    # Volumes for persistence and device access
     volumes:
       - zebra_data:/app/data
       - zebra_logs:/var/log/zebra-print
-      - /dev:/dev:ro  # Device access
+      - /dev:/dev  # Full device access (not read-only)
+      - /run/udev:/run/udev:ro  # udev access for device detection
+      - ./:/workspace:ro  # Mount source for development access
     
-    # Environment variables
+    # Environment variables - loaded from .env file
+    env_file: .env
     environment:
-      - ZEBRA_API_HOST=0.0.0.0
-      - ZEBRA_API_PORT=5000
-      - ZEBRA_PRINTER_NAME=ZTC-ZD230-203dpi-ZPL
+      - ZEBRA_API_HOST=${ZEBRA_API_HOST:-0.0.0.0}
+      - ZEBRA_API_PORT=${ZEBRA_API_PORT:-5000}
+      - ZEBRA_PRINTER_NAME=${ZEBRA_PRINTER_NAME:-ZTC-ZD230-203dpi-ZPL}
       - ZEBRA_DB_PATH=/app/data/zebra_print.db
-      - TZ=UTC
+      - ZEBRA_API_TOKEN=${ZEBRA_API_TOKEN}
+      - ZEBRA_DOMAIN=${ZEBRA_DOMAIN}
+      - ZEBRA_TUNNEL_TYPE=${ZEBRA_TUNNEL_TYPE}
+      - TZ=${TZ:-UTC}
+      - PYTHONPATH=/app
     
     # Health check
     healthcheck:
@@ -38,6 +44,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    
+    # Labels for easier management
+    labels:
+      - "project=zebra-print"
+      - "service=api"
 
 volumes:
   zebra_data:

@@ -33,7 +33,36 @@ logging.basicConfig(
     ]
 )
 
-PRINTER_NAME = "ZDesigner ZD230-203dpi ZPL"
+def get_zebra_printer_name():
+    """Auto-detect Zebra printer from CUPS."""
+    try:
+        result = subprocess.run(['lpstat', '-p'], capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            lines = result.stdout.strip().split('\n')
+            for line in lines:
+                # Look for printer lines that contain Zebra keywords
+                if line.startswith('printer ') and any(keyword in line.lower() for keyword in ['zebra', 'ztc', 'zd230']):
+                    # Extract printer name from "printer NAME ..."
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        return parts[1]
+            
+            # If no Zebra printer found, return the first available printer
+            for line in lines:
+                if line.startswith('printer '):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        logging.warning(f"No Zebra printer found, using: {parts[1]}")
+                        return parts[1]
+                        
+    except Exception as e:
+        logging.error(f"Failed to detect printer: {e}")
+    
+    # Fallback to default
+    return "ZTC-ZD230-203dpi-ZPL"
+
+PRINTER_NAME = get_zebra_printer_name()
+logging.info(f"[INIT] Using printer: {PRINTER_NAME}")
 
 def json_to_zpl(label_data):
     """
@@ -125,7 +154,10 @@ def print_to_zebra(zpl_commands):
             logging.error(f"[ERROR] Failed to import zebra_print.printer: {import_error}")
             return False, f"Printer module import failed: {import_error}. Check Python path and zebra_print installation."
         
-        printer_service = get_zebra_printer(PRINTER_NAME)
+        # Re-detect printer in case it changed
+        current_printer = get_zebra_printer_name()
+        logging.info(f"[PRINTER] Using detected printer: {current_printer}")
+        printer_service = get_zebra_printer(current_printer)
         success, message = printer_service.print_zpl(zpl_commands)
         
         if success:
@@ -247,7 +279,10 @@ def printer_status():
                 "timestamp": datetime.now().isoformat()
             }), 500
         
-        printer_service = get_zebra_printer(PRINTER_NAME)
+        # Re-detect printer in case it changed
+        current_printer = get_zebra_printer_name()
+        logging.info(f"[PRINTER] Using detected printer: {current_printer}")
+        printer_service = get_zebra_printer(current_printer)
         status = printer_service.get_status()
         
         # Map status to API response format

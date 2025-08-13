@@ -3,9 +3,10 @@ Authentication middleware for Flask API endpoints.
 Provides decorators and utilities for token-based authentication.
 """
 
+import os
 from functools import wraps
 from flask import request, jsonify, g
-from typing import Optional
+from typing import Optional, Tuple
 
 
 class AuthMiddleware:
@@ -14,6 +15,21 @@ class AuthMiddleware:
     def __init__(self, token_manager):
         """Initialize with token manager instance."""
         self.token_manager = token_manager
+        # Get system token from environment for persistent access
+        self.system_token = os.getenv('ZEBRA_API_TOKEN')
+    
+    def _validate_token(self, token: str) -> Tuple[bool, str]:
+        """Validate token - checks system token first, then database tokens."""
+        if not token:
+            return False, None
+            
+        # Check system token from environment first
+        if self.system_token and token == self.system_token:
+            return True, "system"
+        
+        # Fall back to database tokens
+        is_valid, token_name = self.token_manager.validate_token(token)
+        return is_valid, token_name or "unknown"
     
     def require_auth(self, f):
         """Decorator to require authentication for Flask routes."""
@@ -27,7 +43,7 @@ class AuthMiddleware:
                     'message': 'API token required. Provide via Authorization header, query param, or request body.'
                 }), 401
             
-            is_valid, token_name = self.token_manager.validate_token(token)
+            is_valid, token_name = self._validate_token(token)
             
             if not is_valid:
                 return jsonify({

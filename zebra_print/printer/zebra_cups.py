@@ -89,6 +89,33 @@ class ZebraCUPSPrinter(PrinterService):
         
         return status
     
+    def print_zpl(self, zpl_content: str) -> Tuple[bool, str]:
+        """Send ZPL content to printer."""
+        try:
+            # Send ZPL commands to printer via CUPS
+            process = subprocess.Popen(
+                ['lp', '-d', self._printer_name, '-o', 'raw'],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            stdout, stderr = process.communicate(input=zpl_content, timeout=30)
+            
+            if process.returncode == 0:
+                job_info = stdout.strip() if stdout else "Job submitted successfully"
+                return True, job_info
+            else:
+                error_msg = stderr.strip() if stderr else "Unknown printing error"
+                return False, f"Print failed: {error_msg}"
+                
+        except subprocess.TimeoutExpired:
+            process.kill()
+            return False, "Print timeout - job took too long"
+        except Exception as e:
+            return False, f"Print error: {str(e)}"
+
     def test_connection(self) -> Tuple[bool, str]:
         """Test printer connection."""
         try:

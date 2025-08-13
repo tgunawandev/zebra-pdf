@@ -21,17 +21,19 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Cloudflare tunnel
+# Install Cloudflare tunnel (optional - skip if network issues)
 RUN curl -L --output cloudflared.deb \
     https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb \
     && dpkg -i cloudflared.deb \
-    && rm cloudflared.deb
+    && rm cloudflared.deb \
+    || echo "Warning: Could not install cloudflared - tunnel features will be limited"
 
-# Install ngrok
+# Install ngrok (optional - skip if network issues)
 RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
     && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list \
     && apt update && apt install ngrok \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    || echo "Warning: Could not install ngrok - tunnel features will be limited"
 
 # Create app directory
 WORKDIR /app

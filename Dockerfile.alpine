@@ -9,12 +9,12 @@ RUN apk add --no-cache \
     curl \
     bash \
     supervisor \
+    usbutils \
+    wget \
     && rm -rf /var/cache/apk/*
 
-# Install Cloudflare tunnel (Alpine version)
-RUN wget -O cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
-    && chmod +x cloudflared \
-    && mv cloudflared /usr/local/bin/
+# Install Cloudflare tunnel (Alpine version) - optional
+RUN echo "Skipping cloudflared for faster build - can be added later if needed"
 
 # Create app directory
 WORKDIR /app
@@ -26,9 +26,11 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /var/log/zebra-print /app/data \
-    && chmod +x zebra_control_v2.py
+# Create necessary directories and log file
+RUN mkdir -p /var/log/zebra-print /app/data && \
+    touch /app/print_api.log && \
+    chmod 666 /app/print_api.log && \
+    chmod +x zebra_control_v2.py
 
 # Configure CUPS
 RUN adduser root lpadmin
