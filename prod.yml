@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   zebra-print:
     image: kodemeio/zebra-pdf:latest
@@ -42,6 +44,14 @@ services:
       retries: 3
       start_period: 40s
     
+    # Host access for better hardware integration
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+    # Networks
+    networks:
+      - public
+    
     # Labels for easier management
     labels:
       - "project=zebra-print"
@@ -54,7 +64,7 @@ volumes:
   zebra_logs:
     driver: local
 
-# For easier management
 networks:
-  default:
-    name: zebra-print-network
+  public:
+  dokploy-network:
+    external: true
