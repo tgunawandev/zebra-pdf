@@ -6,9 +6,13 @@ services:
     
     # USB printer access - full device access
     privileged: true
-    network_mode: host  # Use host networking for better USB access
     devices:
       - /dev/bus/usb:/dev/bus/usb
+    
+    # Port mapping for production
+    ports:
+      - "5000:5000"
+      - "631:631"
     
     # Volumes for persistence and device access
     volumes:
