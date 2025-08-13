@@ -198,6 +198,12 @@ def print_to_zebra(zpl_commands: str):
 
 # API Endpoints
 
+@app.get("/", tags=["Info"])
+async def root():
+    """Root endpoint - redirects to API documentation."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
     """Health check endpoint."""

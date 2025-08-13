@@ -41,7 +41,8 @@ COPY docker/supervisor-alpine.conf /etc/supervisor/conf.d/zebra-print.conf
 # Create printer detection and setup scripts
 COPY docker/detect-printer.sh /usr/local/bin/detect-printer.sh
 COPY docker/auto-printer-setup.sh /app/docker/auto-printer-setup.sh
-RUN chmod +x /usr/local/bin/detect-printer.sh /app/docker/auto-printer-setup.sh
+COPY docker/start-tunnel.sh /app/docker/start-tunnel.sh
+RUN chmod +x /usr/local/bin/detect-printer.sh /app/docker/auto-printer-setup.sh /app/docker/start-tunnel.sh
 
 # Create Alpine-specific entrypoint script
 COPY docker/entrypoint-alpine.sh /entrypoint.sh
