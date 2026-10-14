@@ -1,12 +1,7 @@
 name: Build and Push to Docker Hub
 
 on:
-  push:
-    branches: [ main, master ]
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ main, master ]
-
+  workflow_dispatch:
 env:
   DOCKER_IMAGE: zebra-pdf
 
